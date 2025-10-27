@@ -250,4 +250,4 @@ exo_data_23 <- exo_data %>% filter(format(Date, "%Y") == "2023")
 
 write.csv(exo_data_23, file.path(dir.csv, "EXO_2023.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
-
+#test123
