@@ -19,6 +19,8 @@ wd <- getwd()
 #uncmment which one you will be using
 # James drive_path <- xyz
 # Sierra drive_path <- xyz
+# 
+# Change for my branch only
 
 dir.data <- file.path(drive_path, "Raw data from sensors/EXO_INSITU")  
 dir.outputs <-file.path(wd, "Outputs")
