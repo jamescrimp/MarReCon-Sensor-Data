@@ -16,7 +16,11 @@ library(stringr)
 wd <- getwd()
 
 #Create paths for data and outputs
-dir.data <- file.path(wd, "Raw data from sensors/EXO_INSITU")  
+#uncmment which one you will be using
+# James drive_path <- xyz
+# Sierra drive_path <- xyz
+
+dir.data <- file.path(drive_path, "Raw data from sensors/EXO_INSITU")  
 dir.outputs <-file.path(wd, "Outputs")
 dir.csv <- file.path(wd, "CSVs")
 
