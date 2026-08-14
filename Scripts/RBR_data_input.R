@@ -1,3 +1,10 @@
+#This is the most recent script for RBR data 
+#SG 8/14/26
+#
+#Function of this script:
+# Pulls .rsk files from the EVOS Farmer google drive ("H:/My Drive/RBR Data") and combines them based on farm folder
+# Tells you which files were read in correctly and which had errors (helpful to use Ruskin to check error files)
+# Creates one CSV file “rbr_data.csv” that has all profile data from readable .rsk files combined
 
 #Required Packages
 library(oce)
@@ -14,13 +21,15 @@ library(tibble)
 library(stringr)
 
 
-setwd("G:/My Drive/RBR Data")
+#setwd("G:/My Drive/RBR Data")
 
 #Save working directory path as an object
 wd <- getwd()
 
-# Set File Paths
-dir.data <- ("G:/My Drive/RBR Data")
+# Set File Paths: Sierra 
+# (change this to your local desktop path if youre not sierra)
+dir.data <- ("H:/My Drive/RBR Data")
+
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
 
@@ -177,6 +186,18 @@ rbr_timefix <- rbr_timefix %>%
   )
 
 rbr_data <- rbr_timefix  
+
+#Pull of data from 2026 for AOF1 
+AOF126 <- rbr_data
+
+AOF126 <- rbr_data %>%
+  filter(year(date) == 2026, site == "AOF1")
+
+write.csv(AOF126, file.path("C:/Users/sierr/MarReCon-Sensor-Data/csv_exports/
+AOF1_2026.csv"), row.names = FALSE)
+
+#write.csv(AOF126, file.path(wd, "AOF1_RBR_2026.csv"), row.names = FALSE)
+
 
 #Create a csv file 
 write.csv(rbr_data, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBR_data.csv"), row.names = FALSE)
