@@ -19,78 +19,115 @@ library(readxl)
 #NOTE: For some reason, the only version of Ruskin that will open certain files is 
 #V2.17.202203042007. Files from certain farms (especially ROK1) wont open in new verions. The Ruskin support tech thinks this is a bug with newer versions that wont open mobile .rsk files
 
+wd <- getwd()
+
 # Set File Paths
 dir.data <- ("H:/My Drive/RBR Data")
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
 
 
-#______________________________________________________________
-
 
 # List all files with *.xlsx extension
 xrsk_files <- list.files(path = dir.data, recursive = TRUE, pattern = "*.xlsx$", full.names = TRUE)
 
-#load in data, change coluns to labels we need, turn to ctd object, 
-#trim data to keep downcasts
-# Initialize an empty list to store CTD objects
+
+#Troubleshoot for missing data
+#
+#Make sure all headers are the same (or at least a sample)
+lapply(xrsk_files[c(1, 50, 100, 150)], function(f) {
+  names(read_excel(f, sheet = "Data", skip = 1))
+})
+#Looks good
+
+#Test pressure vs sea pressure errors
+#make sure we are only reading in sea pressure
+lapply(xrsk_files[c(1, 50, 100, 150)], function(f) {
+  names(read_excel(f, sheet = "Data", skip = 1))[c(1,2,3,5,7,9,10)]
+})
+
+#Read in csvs and convert to ctd objects
+#make sure loop continues if there are errors 
 data_list <- list()
+skipped <- list()
 
 for (file in xrsk_files) {
-  # Read just the sheet lablled 'Data', skipping the first 2 rows so we can rename what we want
-  sheet_data <- read_excel(file, sheet = "Data", skip = 1)
-  
-  # Add a column to indicate the file path- helps w/ naming
-  sheet_data <- sheet_data %>% mutate(FilePath = file)
-  
-   #Rename columns to match CTD expectations (new = old)
-  sheet_data <- sheet_data %>% rename(
-    press = "Pressure",    
-    temperature = "Temperature",  
-    salinity = "Salinity" ,
-    pressure = "Sea pressure" 
+  sheet_data <- tryCatch(
+    read_excel(file, sheet = "Data", skip = 1),
+    error = function(e) { message("Can't read: ", basename(file)); NULL }
   )
+  if (is.null(sheet_data)) next
   
-  # Convert to CTD object
+  # Guard: skip files that don't have enough columns
+  if (ncol(sheet_data) < 10) {
+    skipped[[file]] <- names(sheet_data)
+    message("SKIPPING (only ", ncol(sheet_data), " cols): ", basename(file))
+    next
+  }
+  
+  # Keep only columns 1,2,3,5,7,9,10 by position (5 = Sea pressure)
+  sheet_data <- sheet_data %>%
+    select(1, 2, 3, 5, 7, 9, 10) %>%
+    mutate(FilePath = file)
+  
+  # Rename by name (unambiguous now that duplicate/extra pressure cols are gone)
+  needed <- c("Temperature", "Salinity", "Sea pressure")
+  missing_cols <- setdiff(needed, names(sheet_data))
+  if (length(missing_cols) > 0) {
+    skipped[[file]] <- names(sheet_data)
+    message("SKIPPING (missing: ", paste(missing_cols, collapse = ", "), "): ", basename(file))
+    next
+  }
+  
+  sheet_data <- sheet_data %>%
+    rename(
+      temperature = "Temperature",
+      salinity = "Salinity",
+      pressure = "Sea pressure"
+    )
+  
   ctd_obj <- as.ctd(sheet_data)
-  
-  # Use ctdTrim to keep only downcasts
   ctd_trimmed <- ctdTrim(ctd_obj, method = "downcast")
   
-  # Append the trimmed CTD object to the list
-  data_list[[length(data_list) + 1]] <- ctd_trimmed
+  cat(basename(file), ": raw =", nrow(sheet_data),
+      " trimmed =", length(ctd_trimmed[["pressure"]]), "\n")
+  
+  data_list[[file]] <- ctd_trimmed
 }
-#This will give an error code about reading the 'Pressure'column, but data will have read ok into data_list
 
-#Combine parts in the data df of each part of the data_list
+#Check to make sure that all files read in- if so, the xrsk_files will match the data_list number
+length(xrsk_files); length(data_list); length(skipped)
+
+#Which files got skipped?
+names(skipped)          # file paths that were skipped
+skipped[[1]]             # column names of the first skipped file, to see what's actually in it
+#These files sus and are ok to be skipped
+
+#Combine into one df
 xrbr_data <- dplyr::bind_rows(lapply(data_list, function(ctd_obj) {
   as.data.frame(ctd_obj@data)
 }))
-#remoce rows out of the water
+
+#remove rows collected out of the water
 xrbr_data <- subset(xrbr_data, pressure >= 0.2)
 
-#Add site names
+#Add site names based on folder files are located in 
 xrbr_data <- xrbr_data %>%
   mutate(Site = str_extract(FilePath, "(?<=\\()[^\\)]+"))
 
 #only keep data we need: time, pressure, temperature, conductivity, site
 xrbr_data <- xrbr_data %>%
   select(Time, pressure, temperature, Conductivity, salinity, Site)
+
 #Add Date
 xrbr_data <- xrbr_data %>%
   mutate(date = as.Date(Time))
 
-#xrbr_data <- xrbr_data %>%
-  #rename(pressure =  "Sea pressure")
-
 xrbr_data <- xrbr_data %>%
   rename_with(tolower)
 
-#Remove negative pressure rows (not in water)
-xrbr_data <- subset(xrbr_data, pressure >= 0.2)
 
-str(xrbr_data)
-
+#----------------
 #Fix sites that were recorded in AK time zone in 2024, all data in 2025 is OK
 #Spring:3/10/2024 
 #Fall: 11/3/202
@@ -132,7 +169,7 @@ rbr_timefix <- rbr_timefix %>%
 xrbr_data <- rbr_timefix 
 
 xrbr_test <- xrbr_data
-
+library(janitor)
 #Check for duplicate rows
 xrbr_test %>% get_dupes()
 
@@ -144,6 +181,9 @@ xrbr_test1 <- xrbr_test %>% distinct()
 
 xrbr_data <- xrbr_test1
 
+xrbr_test1 %>%
+  distinct(site, date) %>%
+  count(site, name = "n_sampling_events")
 
 write.csv(xrbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\xRBR_data_18AUG26.csv"), row.names = FALSE)
 

@@ -36,17 +36,26 @@ xRBRlist <- read_csv(file.path(dir.data, "xRBR_data_18AUG26.csv"))
 #str(exoRBRlist)
 
 
-#profiles include down casts and up casts (ie data from down and up)
-#make pressure neg
+#make pressure neg (better for plotting)
 xRBRlist$pressure <- -xRBRlist$pressure # reverse sign for plotting
 RBRlist$pressure <- -RBRlist$pressure # reverse sign for plotting
 #exoRBRlist$pressure <- -exoRBRlist$pressure
 
-#Combine xRBR and RBR
+#Combine xRBR(csv data) and RBR (.rsk data)
 RBRdat <- rbind(RBRlist,xRBRlist)
 #RBRdat <- rbind(RBRdat,exoRBRlist)
 
-#remove conductivity less than 10
+RBRdat %>%
+  distinct(site, date) %>%
+  count(site, name = "n_sampling_events")
+
+#look for duplicates
+RBRdat %>% get_dupes()
+
+#Remove duplicate rows (keep first one)
+RBRdat <- RBRdat %>% distinct()
+
+#remove conductivity less than 10- likely not in water yet
 RBRdat <- RBRdat %>%
   dplyr::filter(conductivity >= 10)
 #RBRdat is working data fram with all RBR data in it

@@ -193,6 +193,11 @@ rbr_test1 <- rbr_test %>% distinct()
 
 rbr_data <- rbr_test1
 
+#How many individual sampling events per farm?
+rbr_test1 %>%
+  distinct(site, date) %>%
+  count(site, name = "n_sampling_events")
+
 #Create a csv file and save it to the csv folder in shared drive
 
 write.csv(rbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_18AUG26.csv"), row.names = FALSE)
