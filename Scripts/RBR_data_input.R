@@ -9,18 +9,17 @@ library(readr)
 library(gsw)
 library(sf)
 library(dplyr)
+library(janitor)
 library(lubridate)
 library(tibble)
 library(stringr)
 
 
-setwd("G:/My Drive/RBR Data")
-
 #Save working directory path as an object
 wd <- getwd()
 
-# Set File Paths
-dir.data <- ("G:/My Drive/RBR Data")
+# Set File Paths:Sierra
+dir.data <- ("H:/My Drive/RBR Data")
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
 
@@ -46,6 +45,7 @@ rsk_files <- rsk_files[!grepl("exclude", rsk_files)]
 rsk_files <- rsk_files[!grepl("duplicates", rsk_files)]
 rsk_files <- rsk_files[!grepl("questions", rsk_files)]
 rsk_files <- rsk_files[!grepl("Ruskin xls", rsk_files)]
+rsk_files <- rsk_files[!grepl("AOA 925", rsk_files)]
 
 
 ####
@@ -176,7 +176,23 @@ rbr_timefix <- rbr_timefix %>%
     )
   )
 
-rbr_data <- rbr_timefix  
+rbr_data <- rbr_timefix
 
-#Create a csv file 
-write.csv(rbr_data, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBR_data.csv"), row.names = FALSE)
+rbr_test <- rbr_data
+
+#Look to see if there are any exact duplicates- sometimes farmers upload the same file multiple times
+
+#View duplicate rows 
+rbr_test %>% get_dupes()
+
+#Check for duplicates based on site
+rbr_test %>% get_dupes(site)
+
+#Remove duplicate rows (keep first one)
+rbr_test1 <- rbr_test %>% distinct()
+
+rbr_data <- rbr_test1
+
+#Create a csv file and save it to the csv folder in shared drive
+
+write.csv(rbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_18AUG26.csv"), row.names = FALSE)

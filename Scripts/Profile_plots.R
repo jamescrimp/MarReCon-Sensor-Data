@@ -12,37 +12,47 @@ library(fields)
 library(tidyverse)
 library(patchwork)
 library(cowplot)
+library(readr)
 
-setwd("C:/MarRecon_code/thesis_work/RBR_code")
-#data from RSK files read into R
-RBRlist <- read_csv(" RBR_data.csv")
-#data from excel ruskins
-xRBRlist <- read_csv("xRBR_data.csv")
+#read these data files in from the shared drive
+dir.data <- file.path(
+  "I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs"
+)
 
-#add data from some EXO profiles we need
-exoRBRlist <- read_csv(
-  "C:/MarRecon_code/thesis_work/RBR_code/EXO_prof/EXO_profiles.csv")
-#correct date form
-exoRBRlist$date <- mdy(exoRBRlist$date)
+#Data from RSK files read into R (latest version)
+RBRlist <- read_csv(file.path(dir.data, "RBR_data_18AUG26.csv"))
+
+#Data from Excel Ruskin files
+xRBRlist <- read_csv(file.path(dir.data, "xRBR_data_18AUG26.csv"))
+
+# #add data from some EXO profiles we need
+# exoRBRlist <- read_csv(
+#   "C:/MarRecon_code/thesis_work/RBR_code/EXO_prof/EXO_profiles.csv")
+# #correct date form
+# exoRBRlist$date <- mdy(exoRBRlist$date)
 
 #Combine date time column 
-exoRBRlist$time <- ymd_hms(paste(exoRBRlist$date, exoRBRlist$time))
-
-str(exoRBRlist)
+#exoRBRlist$time <- ymd_hms(paste(exoRBRlist$date, exoRBRlist$time))
+#str(exoRBRlist)
 
 
 #profiles include down casts and up casts (ie data from down and up)
 #make pressure neg
 xRBRlist$pressure <- -xRBRlist$pressure # reverse sign for plotting
 RBRlist$pressure <- -RBRlist$pressure # reverse sign for plotting
-exoRBRlist$pressure <- -exoRBRlist$pressure
+#exoRBRlist$pressure <- -exoRBRlist$pressure
 
+#Combine xRBR and RBR
 RBRdat <- rbind(RBRlist,xRBRlist)
-RBRdat <- rbind(RBRdat,exoRBRlist)
+#RBRdat <- rbind(RBRdat,exoRBRlist)
 
 #remove conductivity less than 10
 RBRdat <- RBRdat %>%
   dplyr::filter(conductivity >= 10)
+#RBRdat is working data fram with all RBR data in it
+
+#Export this CSV that has all RBR data recorded by farmers up to date (18AUG2026)
+write.csv(RBRdat, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_all_18AUG26.csv"), row.names = FALSE)
 
 # Calculate decimal year
 date_to_decimal <- function(date) {

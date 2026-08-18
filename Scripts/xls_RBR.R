@@ -13,13 +13,14 @@ library(stringr)
 library(readxl)
 
 #This is code to upload csvs from Ruskin that were created for .rsk files would not read into R 
-#Updated 11/20/2025 
+#Updated 8/18/2026
 #Sierra Greene
 
-wd<- setwd("G:/My Drive/RBR Data")
+#NOTE: For some reason, the only version of Ruskin that will open certain files is 
+#V2.17.202203042007. Files from certain farms (especially ROK1) wont open in new verions. The Ruskin support tech thinks this is a bug with newer versions that wont open mobile .rsk files
 
 # Set File Paths
-dir.data <- ("G:/My Drive/RBR Data")
+dir.data <- ("H:/My Drive/RBR Data")
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
 
@@ -128,9 +129,23 @@ rbr_timefix <- rbr_timefix %>%
     )
   )
 
-xrbr_data <- rbr_timefix  
+xrbr_data <- rbr_timefix 
 
-write.csv(xrbr_data, file.path("C:/MarRecon_code/thesis_work/RBR_code/xRBR_data.csv"), row.names = FALSE)
+xrbr_test <- xrbr_data
+
+#Check for duplicate rows
+xrbr_test %>% get_dupes()
+
+#Check for duplicates based on site
+xrbr_test %>% get_dupes(site)
+
+#Remove duplicate rows (keep first one)
+xrbr_test1 <- xrbr_test %>% distinct()
+
+xrbr_data <- xrbr_test1
+
+
+write.csv(xrbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\xRBR_data_18AUG26.csv"), row.names = FALSE)
 
 #_____________________EXO PROFILES____________________
 #It will take some work to wrangle the csvs into shape before running this code
