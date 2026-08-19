@@ -15,17 +15,16 @@ library(stringr)
 #Save working directory path as an object
 wd <- getwd()
 
-#Create paths for data and outputs
+#Create path for data
 #uncomment which one you will be using
 
 # James drive path
-#dir.data <- 
+dir.data <- file.path("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data/Sensor Data Management /Raw data from sensors/EXO_INSITU")
 
 # Sierra drive path 
 # dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/EXO_INSITU")
-# 
-#dir.data <- file.path(drive_path, "Raw data from sensors/EXO_INSITU")  
 
+#Create paths for outputs
 dir.outputs <-file.path(wd, "Outputs")
 dir.csv <- file.path(wd, "CSVs")
 
@@ -36,14 +35,14 @@ csv_files <- list.files(path = dir.data, pattern = "*.csv", full.names = TRUE, r
 #Create an empty list to store individual data frames
 data_list <- list()
 
-#Temporarily removing a messed up data file
-csv_files <- csv_files[-8]
+# # #Temporarily removing a messed up data file
+# csv_files <- csv_files[-3]
 
 #Loop through each CSV file and read it into a data frame
 for (file in csv_files) {
   
-  # df <- read.csv(csv_files[8], skip = 9, header = FALSE, stringsAsFactors = FALSE)
-
+  df <- read.csv(csv_files[8], skip = 9, header = FALSE, stringsAsFactors = FALSE)
+  
   df <- read.csv(file, skip = 9, header = FALSE)
   # 
   #Create a site identifier for each dataframe

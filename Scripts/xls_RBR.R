@@ -16,10 +16,10 @@ library(readxl)
 #Updated 11/20/2025 
 #Sierra Greene
 
-wd<- setwd("G:/My Drive/RBR Data")
+wd<- setwd("C:/MarRecon_code/thesis_work/RBR_code")
 
 # Set File Paths
-dir.data <- ("G:/My Drive/RBR Data")
+dir.data <- ("H:/My Drive/RBR Data")
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
 
