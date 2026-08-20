@@ -26,8 +26,8 @@ dir.data <- file.path(dir, "Raw data from sensors/EXO_INSITU")
 # dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/EXO_INSITU")
 
 #Create paths for outputs
-dir.outputs <-file.path(wd, "Outputs")
-dir.csv <- file.path(wd, "CSVs")
+dir.outputs <-file.path(dir, "Outputs")
+dir.csv <- file.path(dir, "CSVs")
 
 
 #Get list of all EXO CSV files
