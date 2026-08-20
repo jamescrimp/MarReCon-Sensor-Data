@@ -1,4 +1,20 @@
-# Discrete ----------------------------------------------------------------
+#  EXO PROFILES DATA INPUT
+#
+#  Purpose:
+#   - Locate and import all EXO depth profiles taken at farm sites
+#   - Attach deployment metadata from filenames
+#   - Add spatial (lat/lon) and regional context
+#   - Export a single combined CSV for QC and analysis
+#
+#  Notes:
+#   - Assumes one profile per CSV file
+#   - Site codes are inferred from filenames
+
+# Load required packages
+
+library(dplyr) # Data wrangling
+library(lubridate) # Date-time parsing
+library(stringr) # Filename parsing via regex
 
 #Create paths for data and outputs
 dir.data.discrete <- file.path(wd, "Raw data from sensors/EXO_profiles/Raw Data sorted")  

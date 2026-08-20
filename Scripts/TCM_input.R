@@ -15,28 +15,27 @@
 
 
 
-# ---- Load required packages --------------------------------
-
+# Load required packages
 library(readr)      # Fast and consistent CSV reading
 library(dplyr)      # Data wrangling
 library(stringr)    # Filename parsing via regex
 library(lubridate)  # Date-time parsing
 
 
-# ---- Define working directories ----------------------------
-
-# Project root (assumes script is run from the project directory)
+# Define working directories
 wd <- getwd()
 
-# Root directory containing raw TCM data
-dir.data <- file.path(wd, "Raw data from sensors", "TCM1")
+# James drive path
+dir <- file.path("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data/Sensor Data Management")
+dir.data <- file.path(dir, "Raw data from sensors/TCM1")
+
 
 # Output directories
-dir.outputs <- file.path(wd, "Outputs")
-dir.csv     <- file.path(wd, "CSVs")
+dir.outputs <- file.path(dir, "Outputs")
+dir.csv     <- file.path(dir, "CSVs")
 
 
-# ---- Identify folders containing current data --------------
+# -Identify folders containing current data
 
 # Recursively search for subfolders that end with "/Current" as opposed to temperature
 # data from TCM-1s
@@ -49,7 +48,7 @@ current_dirs <- list.dirs(
 
 
 
-# ---- List all current CSV files ----------------------------
+# List all current CSV files
 
 # Find all CSV files contained within "Current" folders
 current_files <- list.files(
@@ -60,7 +59,7 @@ current_files <- list.files(
 )
 
 
-# ---- Read and process each CSV -----------------------------
+# Read and process each CSV
 
 # Initialize list to hold per-file data frames
 current_list <- list()
@@ -86,11 +85,11 @@ for (file in current_files) {
 }
 
 
-# ---- Combine all files into one data frame -----------------
+# Combine all files into one data frame
 
 current_data <- bind_rows(current_list)
 
-# ---- Identify folders containing temperature data --------------
+# Identify folders containing temperature data
 
 # Recursively search for subfolders that end with "/Current" as opposed to temperature
 # data from TCM-1s
@@ -103,7 +102,7 @@ temp_dirs <- list.dirs(
 
 
 
-# ---- List all current CSV files ----------------------------
+# List all current CSV files
 
 # Find all CSV files contained within "Current" folders
 temp_files <- list.files(
@@ -114,7 +113,7 @@ temp_files <- list.files(
 )
 
 
-# ---- Read and process each CSV -----------------------------
+# Read and process each CSV
 
 # Initialize list to hold per-file data frames
 temp_list <- list()
@@ -139,17 +138,17 @@ for (file in temp_files) {
 }
 
 
-# ---- Combine all files into one data frame -----------------
+# Combine all files into one data frame
 
 temp_data <- bind_rows(temp_list)
 
 
-# ---- Merge current and temp data -----------------
+# Merge current and temp data
 
 tcm_data <- left_join(current_data, temp_data, by = c("site", "ISO 8601 Time"))
 
 
-# ---- Remove/rename columns for consistency ------------------------
+# Remove/rename columns for consistency
 
 tcm_data <- tcm_data[,-c(9:14, 16)]
 
@@ -166,7 +165,7 @@ colnames(tcm_data) <- c(
 )
 
 
-# ---- Attach latitude and longitude -------------------------
+# Attach latitude and longitude
 
 # Coordinates correspond to fixed monitoring sites
 latitude_values <- c(
@@ -188,7 +187,7 @@ tcm_data <- tcm_data %>%
   )
 
 
-# ---- Attach region identifier ------------------------------
+# Attach region identifier
 
 # Region codes used consistently across the project
 region_values <- c(
@@ -201,14 +200,14 @@ tcm_data <- tcm_data %>%
   mutate(region = region_values[site])
 
 
-# ---- Convert timestamps to POSIXct -------------------------
+# Convert timestamps to POSIXct
 
 # Ensure all timestamps are parsed consistently in UTC
 tcm_data <- tcm_data %>%
   mutate(Time_UTC = ymd_hms(Time_UTC, tz = "UTC"))
 
 
-# ---- Export combined dataset -------------------------------
+# Export combined dataset
 
 # Write a single CSV for QC and analysis pipelines
 write_csv(

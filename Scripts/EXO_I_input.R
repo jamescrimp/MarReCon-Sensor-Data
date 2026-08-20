@@ -1,16 +1,22 @@
 
-#Required Packages
-library(ggplot2)
-library(DBI)
-library(purrr)
-library(readr)
-library(gsw)
-library(sf)
-library(dplyr)
-library(lubridate)
-library(readxl)
-library(stringr)
+#  EXO IN SITU DATA INPUT
+#
+#  Purpose:
+#   - Locate and import all EXO IN SITU CSVs from 3 to 5 month deployments at farm sites
+#   - Attach deployment metadata from filenames
+#   - Add spatial (lat/lon) and regional context
+#   - Export a single combined CSV for QC and analysis
+#
+#  Notes:
+#   - Assumes one deployment per CSV file
+#   - Site codes are inferred from filenames
+#   - Coordinates match EXO sensor locations
 
+
+#Load required packages
+library(dplyr) # Data wrangling
+library(lubridate) # Date-time parsing
+library(stringr) # Filename parsing via regex
 
 #Save working directory path as an object
 wd <- getwd()
@@ -29,15 +35,11 @@ dir.data <- file.path(dir, "Raw data from sensors/EXO_INSITU")
 dir.outputs <-file.path(dir, "Outputs")
 dir.csv <- file.path(dir, "CSVs")
 
-
 #Get list of all EXO CSV files
 csv_files <- list.files(path = dir.data, pattern = "*.csv", full.names = TRUE, recursive = TRUE)
 
 #Create an empty list to store individual data frames
 data_list <- list()
-
-# # #Temporarily removing a messed up data file
-# csv_files <- csv_files[-3]
 
 #Loop through each CSV file and read it into a data frame
 for (file in csv_files) {
@@ -150,3 +152,10 @@ exo_dataI$region <- region_values[exo_dataI$Site]
 #Create a csv file for further review
 write.csv(exo_dataI, file.path(dir.csv, "EXO_I_data.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
+#Create individual CSV files by year for upload to research workspace
+
+exo_data_23 <- exo_dataI %>% filter(format(Date, "%Y") == "2023")
+write.csv(exo_data_23, file.path(dir.csv, "EXO_2023.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+
+exo_data_24 <- exo_dataI %>% filter(format(Date, "%Y") == "2024")
+write.csv(exo_data_24, file.path(dir.csv, "EXO_2024.csv"), row.names = FALSE, fileEncoding = "UTF-8")
