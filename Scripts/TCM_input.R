@@ -1,116 +1,231 @@
 
-#Required Packages
-library(ggplot2)
-library(DBI)
-library(purrr)
-library(readr)
-library(gsw)
-library(sf)
-library(dplyr)
-library(lubridate)
-library(readxl)
-library(stringr)
+#  TCM CURRENT DATA INGESTION PIPELINE
+#
+#  Purpose:
+#   - Locate and import all TCM current CSVs
+#   - Restrict to folders containing "Current" data
+#   - Attach deployment metadata from filenames
+#   - Add spatial (lat/lon) and regional context
+#   - Export a single combined CSV for QC and analysis
+#
+#  Notes:
+#   - Assumes one deployment per CSV file
+#   - Site codes are inferred from filenames
+#   - Coordinates match EXO / PAR sensor locations
 
-#Save working directory path as an object
+
+
+# Load required packages
+library(readr)      # Fast and consistent CSV reading
+library(dplyr)      # Data wrangling
+library(stringr)    # Filename parsing via regex
+library(lubridate)  # Date-time parsing
+
+
+# Define working directories
 wd <- getwd()
 
-#Create paths for data and outputs
-dir.data <- file.path(wd, "Raw data from sensors/TCM1")  
-dir.outputs <-file.path(wd, "Outputs")
-dir.csv <- file.path(wd, "CSVs")
-
-current.data <- list.dirs(dir.data, full.names = TRUE, recursive = TRUE) %>%
-  grep("/Current$", ., value = TRUE)
+# James drive path
+dir <- file.path("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data/Sensor Data Management")
+dir.data <- file.path(dir, "Raw data from sensors/TCM1")
 
 
-#Get list of all EXO CSV files
-csv_files <- list.files(path = current.data, pattern = "*.csv", full.names = TRUE, recursive = TRUE)
-
-#Create an empty list to store individual data frames
-data_list <- list()
+# Output directories
+dir.outputs <- file.path(dir, "Outputs")
+dir.csv     <- file.path(dir, "CSVs")
 
 
+# -Identify folders containing current data
 
-data_list <- list()
+# Recursively search for subfolders that end with "/Current" as opposed to temperature
+# data from TCM-1s
+current_dirs <- list.dirs(
+  path        = dir.data,
+  recursive   = TRUE,
+  full.names = TRUE
+) |>
+  grep("/Current$", x = _, value = TRUE)
 
-#Loop through each CSV file and read it into a data fram
-for (file in csv_files) {
+
+
+# List all current CSV files
+
+# Find all CSV files contained within "Current" folders
+current_files <- list.files(
+  path        = current_dirs,
+  pattern     = "\\.csv$",
+  full.names  = TRUE,
+  recursive   = TRUE
+)
+
+
+# Read and process each CSV
+
+# Initialize list to hold per-file data frames
+current_list <- list()
+
+for (file in current_files) {
   
-  df <- read.csv(file, header = TRUE)
+  # Read raw CSV
+  df <- read_csv(file, show_col_types = FALSE)
   
-  # Add metadata for trimming later
+  # Attach file-level metadata
   df <- df %>%
     mutate(
       source_file = basename(file),
       row_in_file = row_number(),
-      code = str_extract(basename(file), "_([A-Za-z0-9]{4})_") |> 
-        str_replace_all("_", "")
+      
+      # Extract 4-character site code from filename
+      # Example: "_BCF1_" → "BCF1"
+      site = str_extract(basename(file), "_([A-Za-z0-9]{4})_") |>
+        str_remove_all("_")
     )
   
-  data_list[[file]] <- df
+  current_list[[file]] <- df
 }
 
-# Combine
-tcm_data <- bind_rows(data_list)
+
+# Combine all files into one data frame
+
+current_data <- bind_rows(current_list)
+
+# Identify folders containing temperature data
+
+# Recursively search for subfolders that end with "/Current" as opposed to temperature
+# data from TCM-1s
+temp_dirs <- list.dirs(
+  path        = dir.data,
+  recursive   = TRUE,
+  full.names = TRUE
+) |>
+  grep("/Temperature$", x = _, value = TRUE)
 
 
-# Add Column labels
-colnames(tcm_data) <- c("Time_UTC", "Speed_cm/s", "Heading", "Velocity_N_cm/s", "Velocity_E_cm/s","source_file", "row_in_file", "site")
 
-#Add columns for lat and long
-tcm_data$Latitude <- NA
-tcm_data$Longitude <- NA
+# List all current CSV files
 
-#Add values to lat/long corresponding to coordinates of in situ EXO 2s at each site
+# Find all CSV files contained within "Current" folders
+temp_files <- list.files(
+  path        = temp_dirs,
+  pattern     = "\\.csv$",
+  full.names  = TRUE,
+  recursive   = TRUE
+)
+
+
+# Read and process each CSV
+
+# Initialize list to hold per-file data frames
+temp_list <- list()
+
+for (file in temp_files) {
+  
+  # Read raw CSV
+  df <- read_csv(file, show_col_types = FALSE)
+  
+  # Attach file-level metadata
+  df <- df %>%
+    mutate(
+      source_file = basename(file),
+      
+      # Extract 4-character site code from filename
+      # Example: "_BCF1_" → "BCF1"
+      site = str_extract(basename(file), "_([A-Za-z0-9]{4})_") |>
+        str_remove_all("_")
+    )
+  
+  temp_list[[file]] <- df
+}
+
+
+# Combine all files into one data frame
+
+temp_data <- bind_rows(temp_list)
+
+
+# Merge current and temp data
+
+tcm_data <- left_join(current_data, temp_data, by = c("site", "ISO 8601 Time"))
+
+
+# Remove/rename columns for consistency
+
+tcm_data <- tcm_data[,-c(9:14, 16)]
+
+colnames(tcm_data) <- c(
+  "Time_UTC",
+  "Speed_cm_s",
+  "Heading_deg",
+  "Velocity_N_cm_s",
+  "Velocity_E_cm_s",
+  "source_file",
+  "row_in_file",
+  "site",
+  "Temp_C"
+)
+
+
+# Attach latitude and longitude
+
+# Coordinates correspond to fixed monitoring sites
 latitude_values <- c(
-  AOF1 = 57.65784,
-  KOB1 = 57.53318,
-  KIS1 = 57.76711,
-  SSF1 = 59.46033,
-  MIO1 = 59.57137,
-  BCF1 = 59.46783,
-  ROK1 = 60.56290,
-  SBO1 = 60.65705,
-  SBR1 = 60.63698
+  AOF1 = 57.65784, KOB1 = 57.53318, KIS1 = 57.76711,
+  SSF1 = 59.46033, MIO1 = 59.57137, BCF1 = 59.46783,
+  ROK1 = 60.56290, SBO1 = 60.65705, SBR1 = 60.63698
 )
 
 longitude_values <- c(
-  AOF1 = -152.42018,
-  KOB1 = -154.02696,
-  KIS1 = -152.41043,
-  SSF1 = -151.51878,
-  MIO1 = -151.27263,
-  BCF1 = -151.51840,
-  ROK1 = -145.96046,
-  SBO1 = -145.89151,
-  SBR1 = -146.00447
+  AOF1 = -152.42018, KOB1 = -154.02696, KIS1 = -152.41043,
+  SSF1 = -151.51878, MIO1 = -151.27263, BCF1 = -151.51840,
+  ROK1 = -145.96046, SBO1 = -145.89151, SBR1 = -146.00447
 )
 
-tcm_data$Latitude <- latitude_values[tcm_data$site]
-tcm_data$Longitude <- longitude_values[tcm_data$site]
+tcm_data <- tcm_data %>%
+  mutate(
+    Latitude  = latitude_values[site],
+    Longitude = longitude_values[site]
+  )
 
-#Create a column identifying region
 
+# Attach region identifier
+
+# Region codes used consistently across the project
 region_values <- c(
-  AOF1 = "kod",
-  KOB1 = "kod",
-  KIS1 = "kod",
-  SSF1 = "kbay",
-  MIO1 = "kbay",
-  BCF1 = "kbay",
-  ROK1 = "pws",
-  SBO1 = "pws",
-  SBR1 = "pws"
+  AOF1 = "kod",  KOB1 = "kod",  KIS1 = "kod",
+  SSF1 = "kbay", MIO1 = "kbay", BCF1 = "kbay",
+  ROK1 = "pws",  SBO1 = "pws",  SBR1 = "pws"
 )
 
-tcm_data$region <- region_values[tcm_data$site]
-
-#Convert time to ymd_hms
-
-tcm_data$Time_UTC <- ymd_hms(tcm_data$Time_UTC)
+tcm_data <- tcm_data %>%
+  mutate(region = region_values[site])
 
 
+# Convert timestamps to POSIXct
 
-#Create a csv file for further review
-write.csv(tcm_data, file.path(dir.csv, "TCM_data.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+# Ensure all timestamps are parsed consistently in UTC
+tcm_data <- tcm_data %>%
+  mutate(Time_UTC = ymd_hms(Time_UTC, tz = "UTC"))
+
+
+# Export combined dataset
+
+# Write a single CSV for QC and analysis pipelines
+write_csv(
+  tcm_data,
+  file.path(dir.csv, "TCM_data.csv")
+)
+
+# Create CSV for 2023
+write.csv(
+  tcm_data %>% filter(year(as.Date(Time_UTC)) == 2023),
+  file.path(dir.csv, "TCM_2023_RAW.csv"),
+  row.names = FALSE
+)
+
+# Create CSV for 2024
+write.csv(
+  tcm_data %>% filter(year(as.Date(Time_UTC)) == 2024),
+  file.path(dir.csv, "TCM_2024_RAW.csv"),
+  row.names = FALSE
+)
 

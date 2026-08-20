@@ -160,8 +160,20 @@ RBRdata2024 <- RBRdat1 %>%
 RBRdata2025 <- RBRdat1 %>%
   dplyr::filter(year == "2025")
 
+RBRdata2026 <- RBRdat1 %>%
+  dplyr::filter(year == "2026")
+
 #Export CSV of RBRs from 2024:
-write.csv(RBRdata2024, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2024.csv"), row.names = FALSE)
+#write.csv(RBRdata2024, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2024.csv"), row.names = FALSE)
+
+#Export 2025 data
+write.csv(RBRdata2025, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2025.csv"), row.names = FALSE)
+
+#Export 2026 data
+write.csv(RBRdata2026, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2026.csv"), row.names = FALSE)
+
+#Export all data 
+#write.csv(RBRdat1, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata_complete.csv"), row.names = FALSE)
 
 #Thesis data mod for DOY plots 
 #make this data I will use for thesis: march 2024 - Feb 2025 
@@ -171,6 +183,7 @@ RBR_thesis <- RBRdat1 %>%
 #add DOY for thesis data 
 RBR_thesis$date <- as.Date(RBR_thesis$date)  # adjust column name as needed
 
+# Thesis work -------------------------------------------------------------
 # Create continuous DOY starting from March 1, 2024
 march_1_2024 <- as.Date("2024-03-01")
 RBR_thesis$doy <- as.numeric(RBR_thesis$date - march_1_2024) + 1
@@ -255,39 +268,54 @@ TEST <- ctd_plotPWS(site_data=RBRdata2025, "ROK1", "salinity")
 #2024 salinity data from PWS 
 ROK124s <- ctd_plotPWS(site_data=RBR_thesis, "ROK1", "salinity")+
   theme(legend.position = "none") +
-  labs(title =NULL)+ theme(axis.text.x = element_blank())
+  labs(title ="A) PWS1")+ 
+  theme(axis.text.x = element_blank())+
+  ylab("Depth (m)")
 
 SBO124s <- ctd_plotPWS(site_data=RBR_thesis, "SBO1", "salinity")+
   theme(legend.position = "none") +
   labs(y = NULL)+
-  labs(title =NULL)+ theme(axis.text.x = element_blank())+ 
+  labs(title ="B) PWS2")+
+  theme(axis.text.x = element_blank())+
   theme(axis.text.y = element_blank())
-
+  
 SBR124s <- ctd_plotPWS(site_data=RBR_thesis, "SBR1", "salinity")+
   labs(y = NULL)+
-  labs(title =NULL)+ theme(axis.text.x = element_blank())+ 
-  theme(axis.text.y = element_blank())
+  labs(title ="C) PWS3")+ 
+  theme(axis.text.y = element_blank())+
+theme(axis.text.x = element_blank())
+#+theme(axis.text.x = element_blank())
 
-PWSsal24 <- ROK124s + SBO124s + SBR124s
+PWSsal24 <-  ROK124s + SBO124s + SBR124s 
 
+PWSsal24_noROK <-  SBO124s + SBR124s + ROK1s
+PWSsal24_noROK
+
+#Export
+ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/PWSsal24_noROK.png", PWSsal24_noROK, width = 10, height =7)
 
 #2024 temp data from PWS 
 ROK124t <- ctd_plotPWS(site_data=RBR_thesis, "ROK1", "temperature")+
   theme(legend.position = "none") +
-  labs(title =NULL)
+  labs(title ="D) PWS1") +
+  ylab("Depth (m)")
 
 SBO124t <- ctd_plotPWS(site_data=RBR_thesis, "SBO1", "temperature")+
   theme(legend.position = "none") +
+  theme(legend.position = "none") +
   labs(y = NULL)+
-  labs(title =NULL)+ 
+  labs(title ="E) PWS2")+
   theme(axis.text.y = element_blank())
 
 SBR124t <- ctd_plotPWS(site_data=RBR_thesis, "SBR1", "temperature")+
   labs(y = NULL)+
-  labs(title =NULL)+ 
-  theme(axis.text.y = element_blank())
+  labs(title = "F) PWS3")+ 
+ theme(axis.text.y = element_blank())
 
-PWStmp24 <- ROK124t + SBO124t + SBR124t
+PWStmp24_noROK1 <-  SBO124t + SBR124t
+ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/PWStmp24_noROK1.png", PWStmp24_noROK1, width = 10, height =7)
+
+#Export 
 
 #2024 density data from PWS 
 ROK124d <- ctd_plotPWS(site_data=RBR_thesis, "ROK1", "sigt")+
@@ -308,21 +336,20 @@ PWSall <- #(ROK124d + SBO124d + SBR124d) /
 
 #combine sal and temp in one plot
 # Column labels as separate plots
-col1 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "ROK1") + 
-  theme_void()
-
-col2 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = -1, label = "SBO1") + 
-  theme_void()
-
-col3 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "SBR1") + 
-  theme_void()
+# col1 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "ROK1") + 
+#   theme_void()
+# 
+# col2 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = -1, label = "SBO1") + 
+#   theme_void()
+# 
+# col3 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "SBR1") + 
+#   theme_void()
 
 # Define the layout design
 layoutplot <- "
-    ddddddeeeeeeaaaaaa
     ffffffggggggbbbbbb
     ffffffggggggbbbbbb
     ffffffggggggbbbbbb
@@ -332,16 +359,21 @@ layoutplot <- "
 
 # Compose plots into a named list
 plotlist <- list(
-  d = col1, e = col2, a = col3,
+  #d = col1, e = col2, a = col3,
   f = ROK124s, g = SBO124s, b = SBR124s,
   h = ROK124t, i = SBO124t, c = SBR124t
 )
 
 # Create the composite plot
 CTD_PLOT_PWS <- wrap_plots(plotlist, 
-                      design = layoutplot,
-                      guides = "collect") &
-  theme(legend.position = "right")
+                      design = layoutplot)
+
+ggsave("C:/MarRecon_code/thesis_work/Plots/Thesis_final/CTD_PLOT_PWS.png", 
+       plot = CTD_PLOT_PWS,
+       width = 10, height = 10, units = "in",
+       dpi = 300, device = "png", 
+       bg = "white")
+
 
 #KBY function- uses dif temp, sal, depth ranges
 # Function to create plot for one site with flexible variable selection
@@ -419,28 +451,36 @@ ctd_plotKBY <- function(site_data, site_name, variable = "salinity") {
 #2024 salinity data from KBY 
 SSF124s <- ctd_plotKBY(site_data=RBR_thesis, "SSF1", "salinity")+
   theme(legend.position = "none") +
-  labs(title = NULL)+ theme(axis.text.x = element_blank())
+  labs(title = "A) KBay3")+ 
+  ylab("Depth (m)")+
+  theme(axis.text.x = element_blank())
 
 MIO124s <- ctd_plotKBY(site_data=RBR_thesis, "MIO1", "salinity")+
   labs(y = NULL,
-       title =NULL)+ theme(axis.text.x = element_blank())+ 
-  theme(axis.text.y = element_blank())
+       title ="B) KBay2")+  
+  theme(axis.text.y = element_blank())+
+theme(axis.text.x = element_blank())
 
 #not enough data to use
 #BCF124s <- ctd_plot(site_data=RBR_thesis, "BCF1", "salinity")+
  # labs(y = NULL)
 
 KBYsal24 <- SSF124s + MIO124s #+ BCF124s
-
+#Export
+ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/KBYsal24.png", KBYsal24, width = 10, height =7)
 
 #2024 temp data from KBY 
-SSF124t <- ctd_plotKBY(site_data=RBR_thesis, "SSF1", "temperature")+
-  theme(legend.position = "none") +
-  labs(title =NULL)
+SSF124t <- ctd_plotKBY(site_data=RBR_thesis, 
+                       "SSF1", "temperature") +
+  ylab("Depth (m)")+
+  theme(legend.position = "none")+
+        labs(title ="C) KBay3") 
+          
 
-MIO124t <- ctd_plotKBY(site_data=RBR_thesis, "MIO1", "temperature")+
+MIO124t <- ctd_plotKBY(site_data=RBR_thesis, 
+                       "MIO1", "temperature") +
   labs(y = NULL,
-       title =NULL)+ 
+       title ="D) KBay2")+ 
   theme(axis.text.y = element_blank())
 
 KBYtmp24 <-SSF124t + MIO124t 
@@ -461,18 +501,17 @@ KBYden24 <- SSF124d + MIO124d
 
 #combine sal and temp in one plot
 # Column labels as separate plots
-col1 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "SSF1") + 
-  theme_void()
-
-col2 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = -1, label = "MIO1") + 
-  theme_void()
+# col1 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "SSF1") + 
+#   theme_void()
+# 
+# col2 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = -1, label = "MIO1") + 
+#   theme_void()
 
 
 # Define the layout design
 layoutplot <- "
-    ddddddeeeeee
     ffffffgggggg
     ffffffgggggg
     ffffffgggggg
@@ -482,16 +521,22 @@ layoutplot <- "
 
 # Compose plots into a named list
 plotlist <- list(
-  d = col1, e = col2, 
+ # d = col1, e = col2, 
   f = SSF124s, g = MIO124s, 
   h = SSF124t, i = MIO124t
 )
 
 # Create the composite plot
 CTD_PLOT_KBY <- wrap_plots(plotlist, 
-                           design = layoutplot,
-                           guides = "collect") &
-  theme(legend.position = "right")
+                           design = layoutplot)
+
+CTD_PLOT_KBY
+
+ggsave("C:/MarRecon_code/thesis_work/Plots/Thesis_final/CTD_PLOT_KBY.png", 
+       plot = CTD_PLOT_KBY,
+       width = 10, height = 10, units = "in",
+       dpi = 300, device = "png", 
+       bg = "white")
 
 #Kodiak function -------------------------------------------
 # Function to create plot for one site with flexible variable selection
@@ -567,26 +612,33 @@ ctd_plotKOD <- function(site_data, site_name, variable = "salinity") {
 }
 
 #KOD salinity 2024
-AOF124s <- ctd_plotKOD(site_data=RBR_thesis, "AOF1", "salinity")+
+AOF124s <- ctd_plotKOD(site_data=RBR_thesis, 
+                       "AOF1", "salinity")+
   theme(legend.position = "none") +
-  labs(title = NULL) + theme(axis.text.x = element_blank())
+  labs(title = "A) Kodiak1") +
+  ylab("Depth (m)")+
+  theme(axis.text.x = element_blank())
 
-KIS124s <- ctd_plotKOD(site_data=RBR_thesis, "KIS1", "salinity")+
+KIS124s <- ctd_plotKOD(site_data=RBR_thesis, 
+                       "KIS1", "salinity")+
   labs(y = NULL,
-       title = NULL) + theme(axis.text.x = element_blank()) + 
-  theme(axis.text.y = element_blank())
+       title = "B) Kodiak2")  + 
+  theme(axis.text.y = element_blank())+
+ theme(axis.text.x = element_blank())
 
 KODsal24 <- AOF124s + KIS124s 
-
+#Export
+#ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/KODsal24.png", KODsal24, width = 10, height =7)
 
 #2024 temp data from KBY 
 AOF124t <- ctd_plotKOD(site_data=RBR_thesis, "AOF1", "temperature")+
   theme(legend.position = "none") +
-  labs(title = NULL)
+  labs(title = "C) Kodiak1")+
+  ylab("Depth (m)")
 
 KIS124t <- ctd_plotKOD(site_data=RBR_thesis, "KIS1", "temperature")+
   labs(y = NULL,
-       title =NULL) + 
+       title ="D) Kodiak2") + 
   theme(axis.text.y = element_blank())
 
 KODtmp24 <- AOF124t + KIS124t
@@ -613,18 +665,17 @@ Alls <- (ROK124s + SBO124s  + SBR124s)/
   (SSF124s + MIO124s)/
   (AOF124s + KIS124s)
 #combine plots
-col1 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "AOF1") + 
-  theme_void()
-
-col2 <- ggplot() + 
-  annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = -1, label = "KIS1") + 
-  theme_void()
+# col1 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = 1, label = "AOF1") + 
+#   theme_void()
+# 
+# col2 <- ggplot() + 
+#   annotate(geom = 'text', size = 4, fontface = 1, x = 1, y = -1, label = "KIS1") + 
+#   theme_void()
 
 
 # Define the layout design
 layoutplot <- "
-    ddddddeeeeee
     ffffffgggggg
     ffffffgggggg
     ffffffgggggg
@@ -634,19 +685,22 @@ layoutplot <- "
 
 # Compose plots into a named list
 plotlist <- list(
-  d = col1, e = col2, 
+ # d = col1, e = col2, 
   f = AOF124s, g = KIS124s, 
   h = AOF124t, i = KIS124t
 )
 
 # Create the composite plot
 CTD_PLOT_KOD <- wrap_plots(plotlist, 
-                           design = layoutplot,
-                           guides = "collect") &
-  theme(legend.position = "right")
+                           design = layoutplot)
+
+ggsave("C:/MarRecon_code/thesis_work/Plots/Thesis_final/CTD_PLOT_KOD.png", 
+       plot = CTD_PLOT_KOD,
+       width = 10, height = 10, units = "in",
+       dpi = 300, device = "png", 
+       bg = "white")
 
 #Export!
-
 ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/CTD_PLOT_PWS.png", CTD_PLOT_PWS, width = 15, height =12)
 
 ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/CTD_PLOT_KBY.png", CTD_PLOT_KBY, width = 15, height =12)
@@ -672,6 +726,9 @@ ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/KODtmp24.png", KODtmp24, wid
 
 
 ###################calendar year plots######################
+
+# Calendar year plots -----------------------------------------------------
+
 
 ctd_plot_annualPWS <- function(site_data, site_name, variable = "salinity") {
   # Define variable-specific settings
@@ -867,11 +924,56 @@ ROK125t <- ctd_plot_annualPWS(site_data=RBRdata2025, "ROK1", "temperature")+
   theme(legend.position = "none") +
   labs(title =NULL)
 
-SBO125t <- ctd_plot_annualPWS(site_data=RBRdata2025, "SBO1", "temperature")+
-  theme(legend.position = "none") +
-  labs(y = NULL)+
-  labs(title =NULL)+ 
-  theme(axis.text.y = element_blank())
+SBO125t <- ctd_plot_annualPWS(site_data=RBRdata2025, "SBO1", "temperature") +
+  labs(y = "Depth (m)", title = NULL) +
+  scale_x_continuous(
+    name = NULL,
+    breaks = c(121, 152, 182, 213, 244, 274, 305),
+    labels = c("May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"),
+    limits = c(121, 305)
+  ) +
+  scale_fill_gradientn(
+    colors = tim.colors(100),
+    name = "Temp\n(°C)",
+    limits = c(0, 18),
+    guide = guide_colorbar(barwidth = 0.5, barheight = 4)
+  ) +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8)
+  )
+SBO125t
+
+SBO125t <- ctd_plot_annualPWS(site_data=RBRdata2025, 
+                              "SBO1", "temperature") +
+  labs(y = "Depth (m)", title = NULL) +
+  scale_x_continuous(
+    name = NULL,
+    breaks = c(121, 152, 182, 213, 244, 274, 305),
+    labels = c("May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"),
+    limits = c(121, 305)
+  ) +
+  scale_y_continuous(
+    name = "Depth (m)",
+    breaks = c(0, -1, -2, -3, -4, -5),
+    labels = c("0", "1", "2", "3", "4", "5"),
+    limits = c(-5, 0)
+  ) +
+  scale_fill_gradientn(
+    colors = tim.colors(100),
+    name = "Temp\n(°C)",
+    limits = c(5, 16),
+    guide = guide_colorbar(barwidth = 0.5, barheight = 4)
+  ) +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8)
+  )
+SBO125t
+  
+  #theme(axis.text.y = element_blank())
 
 SBR125t <- ctd_plot_annualPWS(site_data=RBRdata2025, "SBR1", "temperature")+
   labs(y = NULL)+
@@ -909,6 +1011,9 @@ plotlist25 <- list(
 # Create the composite plot - use + instead of &
 CTD_PLOT_PWS2025 <- wrap_plots(plotlist25, 
                                design = layoutplot)
+
+
+CTD_PLOT_PWS2024
 
 #Export 2025 CTD plots 
 ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/PWS2025.png", CTD_PLOT_PWS2025, width = 15, height =8 )
@@ -963,7 +1068,7 @@ ctd_plot_annualKBY <- function(site_data, site_name, variable = "salinity") {
                          name = current_settings$name,
                          limits = current_settings$limits) +
     geom_point(data = site_data_clean, aes_string(x = "doy", y = "pressure"), 
-               fill = NA, color = "darkgrey", size = 0.05, shape = 3) +
+               fill = NA, color = "black", size = 0.05, shape = 3) +
     scale_x_continuous(
       name = NULL,
       breaks = c(1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335),
@@ -1086,6 +1191,37 @@ SSF125t <- ctd_plot_annualKBY(site_data=RBRdata2025, "SSF1", "temperature")+
 MIO125t <- ctd_plot_annualKBY(site_data=RBRdata2025, "MIO1", "temperature")+
   theme(legend.position = "none") +
   labs(title =NULL)
+
+MIO125t <- ctd_plot_annualKBY(site_data=RBRdata2025, 
+                              "MIO1", "temperature") +
+  labs(y = "Depth (m)", title = NULL) +
+  scale_x_continuous(
+    name = NULL,
+    breaks = c(121, 152, 182, 213, 244, 274, 305),
+    labels = c("May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"),
+    limits = c(121, 305)
+  ) +
+  scale_y_continuous(
+    name = "Depth (m)",
+    breaks = c(0, -1, -2, -3, -4, -5),
+    labels = c("0", "1", "2", "3", "4", "5"),
+    limits = c(-5, 0)
+  ) +
+  scale_fill_gradientn(
+    colors = tim.colors(100),
+    name = "Temp\n(°C)",
+    limits = c(7, 13),
+    guide = guide_colorbar(barwidth = 0.5, barheight = 4)
+  ) +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8)
+  )
+MIO125t
+
+#Export
+ggsave("C:/MarRecon_code/thesis_work/RBR_code/plots/MIO1_temp_sum2025.png", MIO125t, width = 5, height =8, bg = "white")
 
 BCF125t <- ctd_plot_annualKBY(site_data=RBRdata2025, "BCF1", "temperature")+
   theme(legend.position = "right") +

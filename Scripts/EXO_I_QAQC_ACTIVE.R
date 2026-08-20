@@ -1,5 +1,5 @@
 ##Use this script to upload raw insitu CSVs from the shared drive and perform QAQC! 
-#Updated: Dec 8 2025 
+#Updated: 5/6/2026 
 #Sierra Greene
 
 #Required Packages
@@ -17,13 +17,13 @@ library(cowplot)
 library(stringr)
 
 #Set Working Directory 
-setwd("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data Management")
+setwd("C:/MarRecon_code/thesis_work")
 
 #Save working directory path as an object
 wd <- getwd()
 
 #Pull drectly from MarRecon shared drive 
-dir.data <- file.path(wd, "Raw data from sensors/EXO_INSITU")
+dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/EXO_INSITU")
 
 
 # Get all CSV files 
@@ -74,33 +74,40 @@ colnames(exo_dataI) <- c("Date",
                          "Cable_Pwr_V", 
                          "Wiper_POS")
 
+
+#remove rows where all data is NA
+exo_dataI <- exo_dataI[rowSums(is.na(exo_dataI)) != ncol(exo_dataI), ]
+
+#Make sure all sites are accounted for- if this doesnt look right check CSVs
+unique(exo_dataI$Site)
+
 #Add columns for lat and long
 exo_dataI$Latitude <- NA
 exo_dataI$Longitude <- NA
 
 #Add values to lat/long corresponding to coordinates of in situ EXO 2s at each site
 latitude_values <- c(
-  AOF1 = 57.65784,
+  AOF1 = 57.65773, 
   KOB1 = 57.53318,
   KIS1 = 57.76711,
-  SSF1 = 59.46033,
+  SSF1 = 59.46044,
   MIO1 = 59.57137,
-  BCF1 = 59.46783,
-  ROK1 = 60.56290,
-  SBO1 = 60.65705,
-  SBR1 = 60.63698
+  BCF1 = 59.46797,
+  ROK1 = 60.56271,
+  SBO1 = 60.65693,
+  SBR1 = 60.63697
 )
 
 longitude_values <- c(
-  AOF1 = -152.42018,
+  AOF1 = -152.41992,
   KOB1 = -154.02696,
   KIS1 = -152.41043,
-  SSF1 = -151.51878,
+  SSF1 = -151.5188,
   MIO1 = -151.27263,
-  BCF1 = -151.51840,
-  ROK1 = -145.96046,
+  BCF1 = -151.51875,
+  ROK1 = -145.96066,
   SBO1 = -145.89151,
-  SBR1 = -146.00447
+  SBR1 = -146.00452
 )
 
 exo_dataI$Latitude <- latitude_values[exo_dataI$Site]
@@ -130,7 +137,7 @@ region_values <- c(
   SBR1 = "PWS"
 )
 
-exo_dataI$region <- region_values[exo_dataI$Site]
+exo_dataI$Region <- region_values[exo_dataI$Site]
 
 #Check to make sure there are no NA values- some in wiper pos but thats ok 
 na_counts<- exo_dataI %>%
@@ -147,9 +154,24 @@ exo_data <- exo_dataI
 
 str(exo_data)
 
-#Exclude values where conductivity < 10,000 (??). This indicates that the exo was out out the water
+#Exclude values where conductivity < 10,000- This indicates that the exo was out out the water
 exo_data <- exo_data %>%filter(Cond_uS.cm > 10000)
 exo_data <- exo_data %>%filter(Depth_M > 1)
+
+#Add month and year column
+exo_data$Month <- month(exo_data$Date)  # Extract month
+exo_data$Year <- year(exo_data$Date)  # Extract year
+
+#Export Raw data for RWS
+#2024
+# EXO_data24 <- exo_data %>%
+#   filter(Year =="2024")
+# write.csv(EXO_data24, file.path(wd, "EXO_data24.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+
+#2025
+# EXO_data25 <- exo_data %>%
+#   filter(Year =="2025")
+# write.csv(EXO_data25, file.path(wd, "EXO_data25.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
 
 # Sensor specs ------------------------------------------------------------
@@ -162,28 +184,30 @@ exo_data <- exo_data %>%filter(Depth_M > 1)
 #Chl 
 exo_data$Chlorophyll_RFU[exo_data$Chlorophyll_RFU <= 0 & 
                            exo_data$Chlorophyll_RFU >= -0.1] <- 0
-exo_data$Chlorophyll_RFU[exo_data$Chlorophyll_RFU < -0.11] <- NA
-exo_data$Chlorophyll_RFU[exo_data$Chlorophyll_RFU > 100] <- NA
+exo_data$Chlorophyll_RFU[exo_data$Chlorophyll_RFU <= -0.11] <- NA
+exo_data$Chlorophyll_RFU[exo_data$Chlorophyll_RFU >= 100] <- NA
 
 exo_data$Chlorophyll_ug.L[exo_data$Chlorophyll_ug.L <= 0 & 
                            exo_data$Chlorophyll_ug.L >= -0.1] <- 0
-exo_data$Chlorophyll_ug.L[exo_data$Chlorophyll_ug.L < -0.11] <- NA
-exo_data$Chlorophyll_ug.L[exo_data$Chlorophyll_ug.L > 100] <- NA
+exo_data$Chlorophyll_ug.L[exo_data$Chlorophyll_ug.L <= -0.11] <- NA
+exo_data$Chlorophyll_ug.L[exo_data$Chlorophyll_ug.L >= 100] <- NA
 
 #TAL PE
 exo_data$TAL_PE_RFU[exo_data$TAL_PE_RFU <= 0 & 
                            exo_data$TAL_PE_RFU >= -0.1] <- 0
-exo_data$TAL_PE_RFU[exo_data$TAL_PE_RFU < -0.11] <- NA
-exo_data$TAL_PE_RFU[exo_data$TAL_PE_RFU > 100] <- NA
+exo_data$TAL_PE_RFU[exo_data$TAL_PE_RFU <= -0.11] <- NA
+exo_data$TAL_PE_RFU[exo_data$TAL_PE_RFU >= 100] <- NA
 
 exo_data$TAL_PE_ug.L[exo_data$TAL_PE_ug.L <= 0 & 
                             exo_data$TAL_PE_ug.L >= -0.1] <- 0
-exo_data$TAL_PE_ug.L[exo_data$TAL_PE_ug.L < -0.11] <- NA
-exo_data$TAL_PE_ug.L[exo_data$TAL_PE_ug.L > 100] <- NA
+exo_data$TAL_PE_ug.L[exo_data$TAL_PE_ug.L <= -0.11] <- NA
+exo_data$TAL_PE_ug.L[exo_data$TAL_PE_ug.L >= 100] <- NA
 
-#Turbidity
-exo_data$Turbidity_FNU[exo_data$Turbidity_FNU > 999] <- NA
+#Turbidity- 124 is max we calibrate to 
+exo_data$Turbidity_FNU[exo_data$Turbidity_FNU > 124] <- NA
 exo_data$Turbidity_FNU[exo_data$Turbidity_FNU < -0.3] <- NA
+exo_data$Turbidity_FNU[exo_data$Turbidity_FNU <= 0 & 
+                         exo_data$Turbidity_FNU >= -0.3] <- 0
 
 #Oxygen
 exo_data$ODO_mg.L[exo_data$ODO_mg.L > 50] <- NA
@@ -192,40 +216,49 @@ exo_data$ODO_sat[exo_data$ODO_sat > 500] <- NA
 
 
 #Remove points outside of biological expectations
-# Salinity over 40 
-exo_data$Sal_PSU[exo_data$Sal_PSU > 40] <- NA
-#Conductivity over 50000
+# Salinity over 35 
+exo_data$Sal_PSU[exo_data$Sal_PSU > 35] <- NA
+#Conductivity over 50000- what we calibrate to
 exo_data$Cond_uS.cm[exo_data$Cond_uS.cm > 50000] <- NA
 #Specific Conductivity over 55000
 exo_data$SpCond_uS.cm[exo_data$SpCond_uS.cm > 55000] <- NA
 
 
-#Define variables to use in calculations before altering headers
-vars <- names(exo_data)[sapply(exo_data, is.numeric)]
+#save all exo data that has basic QAQC
+exo_data_all <- exo_data
 
-str(vars)
+#Export ROK1 spring 2026 data for AK 
+ROK1_sp26 <- exo_data %>%
+    filter(Year =="2026", 
+           Site == "ROK1")
 
+ROK1_sp26 <- ROK1_sp26[,-c(7,9,11,12,13,14,20,21,22,23,24,25,26)]
+#Export 
 
-#Add month and year 
-exo_data$month <- month(exo_data$Date)  # Extract month
-exo_data$year <- year(exo_data$Date)  # Extract year
-
+write.csv(ROK1_sp26, file.path(wd, "ROK1_sp26.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
 #_____End of basic QAQC based on sensor specs___________________ 
 #
 #
-#Calculate SD based on annual RAW values for the year- this is what VIMS does with these sensors 
+#Calculate SD based on annual RAW values for the year- this is what VIMS does with these sensors. They use +/- 1 SD from previous point, but that seems to limiting. We will use +/- 3 SD  
+
 
 # Start of advanced QAQC --------------------------------------------------
+library(dplyr)
 
-#Calculate SD for each variable
+#Calculate site based monthly SD for each variable
+
+vars <- names(exo_data)[sapply(exo_data, is.numeric) & !names(exo_data) %in% c("Year", "Site")]
+
 sd_exo <- exo_data %>%
-  dplyr::group_by(Site, year) %>%
-  dplyr::summarise(across(all_of(vars), ~ sd(., na.rm = TRUE), .names = "SD_{.col}"),
-            .groups = "drop")
+  dplyr::group_by(Year, Site) %>%
+  dplyr::summarise(across(all_of(vars), 
+                          ~ sd(., na.rm = TRUE), .names = "SD_{.col}"),
+                           .groups = "drop")
 
 #Join SD data back to RAW data in new df
-exo_data_yr <- left_join(exo_data, sd_exo, by = c("Site", "year"))
+exo_data_yr <- left_join(exo_data, sd_exo, 
+                         by = c("Site", "Year"))
 
 #exo_data_yr is our working df for raw data and stats
 
@@ -240,8 +273,8 @@ for (i in 2:nrow(exo_data_yr)) {
   
   site_curr  <- exo_data_yr$Site[i]
   site_prev  <- exo_data_yr$Site[i - 1]
-  year_curr  <- exo_data_yr$year[i]
-  year_prev  <- exo_data_yr$year[i - 1]
+  year_curr  <- exo_data_yr$Year[i]
+  year_prev  <- exo_data_yr$Year[i - 1]
   
   # First: Check that nothing is NA
   if (!is.na(site_curr) && !is.na(site_prev) &&
@@ -265,6 +298,8 @@ for (i in 2:nrow(exo_data_yr)) {
   }
 }
 
+#look at df we created 
+exo_data_yr
 
 #___________________________________________________________________________-
 #Look and see if there are any visible outliers based on time series graphs 
@@ -274,7 +309,7 @@ for (i in 2:nrow(exo_data_yr)) {
 #PWS 
 #
 pws_data <- exo_data_yr %>%
-  filter(region == "PWS")
+  filter(Region == "PWS")
 
 #salinity- 
 PWSsal <- ggplot(pws_data, aes(y = Sal_PSU, x = Date)) +
@@ -288,6 +323,8 @@ PWSsal <- ggplot(pws_data, aes(y = Sal_PSU, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red"))+
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
+
+#Need to assess salinity at ROK1 at end of summer 2025- whacky sensor
 
 #temp
 PWStmp <- ggplot(pws_data, aes(y = Temp_C, x = Date)) +
@@ -326,6 +363,7 @@ geom_point(aes(color = factor (outlier_Turbidity_FNU)), alpha = 0.6) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
+#Turbidity at SBO1 too high at end of April 2026
 
 #DO %
 #
@@ -353,12 +391,13 @@ PWSDOmgl <- ggplot(pws_data, aes(y = ODO_mg.L, x = Date)) +
   theme_minimal()
 #
 #Look further into:
-#ROK1 summer 2025 salinty0 manually remove
+#ROK1 summer 2025 salinty manually remove
 #ROK1 summer 2025 DO mg/L- looks like there is a drop in DO mg/L but not %
+#SBO1 april 2026 turbidity
 #___________________KBY________________
 #
 kby_data <- exo_data_yr %>%
-  filter(region == "KBY")
+  filter(Region == "KBY")
 
 #salinity
 KBYsal <- ggplot(kby_data, aes(y = Sal_PSU, x = Date)) +
@@ -371,6 +410,8 @@ KBYsal <- ggplot(kby_data, aes(y = Sal_PSU, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
+#wonky BCF1 salinity in winter 2026 from bad sensor
+#low sal drift at MIO1?
 
 #temp
 KBYtmp <- ggplot(kby_data, aes(y = Temp_C, x = Date)) +
@@ -434,11 +475,11 @@ KBYDOmgl <- ggplot(kby_data, aes(y = ODO_mg.L, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
-
+#BCF1 mg/L oxygen likley impacted by winky CT sensor- looks lower than it should
 #
 #____________________KOD_________________
 kod_data <- exo_data_yr %>%
-  filter(region == "KOD")
+  filter(Region == "KOD")
 
 #salinity
 KODsal <- ggplot(kod_data, aes(y = Sal_PSU, x = Date)) +
@@ -451,7 +492,7 @@ KODsal <- ggplot(kod_data, aes(y = Sal_PSU, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
-
+#KOB1 looks like its drifting low after Aug 2024- cut off after 6 mo?
 #temp
 KODtmp <- ggplot(kod_data, aes(y = Temp_C, x = Date)) +
   geom_point(aes(color = factor (outlier_Temp_C)), alpha = 0.6) +
@@ -526,6 +567,8 @@ KODDOmgl <- ggplot(kod_data, aes(y = ODO_mg.L, x = Date)) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
 
+#KBO1 mg/L doesnt necessarily look bad, but should be removed during salinity drift period
+
 ###REMOVE OUTLIERS##
 ###
 #Make values more than the 3 * SD from previous point NA
@@ -571,9 +614,11 @@ na_counts<- exo_data2 %>%
 
 print(na_counts)
 
-#At SSF1- there are only 4 points in very high RFU range
+#At SSF1- there are only 4 points in very high RFU range with no build up to them
 #These are likely still errors-lets remove them
-
+exo_data2 <- exo_data2[
+  !(exo_data2$Site == "SSF1" &      
+      exo_data2$Chlorophyll_RFU > 30), ]
 
 #Export CSV with outliers removed
 #write.csv(exo_data2, file = "EXO_data_outrmv.csv", row.names = FALSE)
@@ -587,13 +632,13 @@ str(df)
 drop <- c("TDS_mg.L", "NLF_conductivity_uS.cm", "Vertical_position_M",
           "Cable_Pwr_V", "Wiper_POS", "SD_NLF_conductivity_uS.cm", 
           "SD_Vertical_position_M", "SD_Pressure_PSIA", "SD_Cable_Pwr_V", "SD_Wiper_POS",
-          "SD_Latitude", "SD_Longitude", "SD_TDS_mg.L")
+          "SD_Latitude", "SD_Longitude", "SD_TDS_mg.L", "TAL_PE_RFU", "TAL_PE_ug.L" )
 
 
 #remove 'drop' headers from df
 df3 <- df[,!(names(df)%in%drop)]
 #Remove outlier stats and SD columns
-df3 <- df3[, -c(22:53)]
+df3 <- df3[, -c(20:53)]
 
 str(df3)
 df1 <- df3
@@ -615,9 +660,9 @@ str(df1)
 #df1 will be our working dataframe
 
 #Create value of params we want to work with 
-vars <- c("TEMP_C", "COND_US.CM", "SPCOND_US.CM",  "SAL_PSU", "DEPTH_M", "PRESSURE_PSIA",  "TAL_PE_RFU", 
-          "TAL_PE_UG.L",  "CHLOROPHYLL_RFU", "CHLOROPHYLL_UG.L",  "ODO_SAT",  "ODO_MG.L" ,
-          "TURBIDITY_FNU")
+vars <- c("TEMP_C", "COND_US.CM", "SAL_PSU", "DEPTH_M",
+          "CHLOROPHYLL_RFU", "CHLOROPHYLL_UG.L", "ODO_SAT",  
+          "ODO_MG.L", "TURBIDITY_FNU")
 
 # ------Manual adjustments/trim------------------
 #make adjustments for visual QAQC errors noticed 
@@ -664,20 +709,17 @@ ROK1sum_sal <- ggplot(ROK1smsal, aes(y = COND_US.CM, x = DATE))+
   theme_cowplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 #Salinity, cond, spcon data went wonky on 7/24 (7/23 last good day)
+#Delete cond, sal, ODO mgL
 df1 <- df1 %>%
-  mutate(SAL_PSU = ifelse(SITE == "ROK1" & 
-        DATE >= as.Date("2025-07-23") & 
-        DATE <= as.Date("2025-09-23"), NA, SAL_PSU))
+  mutate(
+    across(
+      c(SPCOND_US.CM, COND_US.CM, SAL_PSU, ODO_MG.L),
+      ~ ifelse(SITE == "ROK1" & 
+                 DATE > as.Date("2025-07-23") & 
+                 DATE < as.Date("2026-08-14"), NA, .x)
+    )
+  )
 
-df1 <- df1 %>%
-  mutate(COND_US.CM = ifelse(SITE == "ROK1" & 
-        DATE >= as.Date("2025-07-23") & 
-        DATE <= as.Date("2025-09-23"), NA, COND_US.CM))
-
-df1 <- df1 %>%
-  mutate(SPCOND_US.CM = ifelse(SITE == "ROK1" & 
-        DATE >= as.Date("2025-07-23") & 
-        DATE <= as.Date("2025-09-23"), NA, SPCOND_US.CM))
 
 
 #Salinity drift at KOB1
@@ -686,7 +728,7 @@ KOB1 <- df1 %>%
     SITE == "KOB1")
 
 #plot KOB1 salinity 
-KOB1_sal <- ggplot(KOB1, aes(y = TEMP_C, x = DATE))+
+KOB1_sal <- ggplot(KOB1, aes(y = SAL_PSU, x = DATE))+
     geom_point(alpha = 0.6, color = "lightblue") +
     scale_x_date(
       date_breaks = "1 month",           
@@ -694,15 +736,109 @@ KOB1_sal <- ggplot(KOB1, aes(y = TEMP_C, x = DATE))+
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 #salinity drops after 8/2024- this is after 6 mo deployed
-#Sensors went out on 2/10, came back 6/4/2025
+#Sensors went out on 2/10/2024, came back 6/4/2025
 #Remove data after the 6 month mark because it is not reliable
+#only salinity looks most impacted 
+
 df1 <- df1 %>%
-  filter(SITE != "KOB1" | 
-           DATE < as.Date("2024-08-10") | 
-           DATE > as.Date("2025-06-04"))
+  mutate(
+    across(
+      c(SPCOND_US.CM, COND_US.CM, SAL_PSU, ODO_MG.L),
+      ~ ifelse(SITE == "KOB1" & 
+                 DATE > as.Date("2024-08-10") & 
+                 DATE < as.Date("2025-06-04"), NA, .x)
+    )
+  )
+
+#turbidty at SBO1 in the spring 2026
+SBO1spturb <- df1 %>%
+  dplyr::filter(
+    SITE == "SBO1",
+    YEAR == "2026",
+    month(DATE) %in% c(3, 4)  
+  ) %>%
+  select(DATE, SITE, TURBIDITY_FNU )
+
+SBO1spturb <- ggplot(SBO1spturb, aes(y = TURBIDITY_FNU, x = DATE))+
+  geom_point(alpha = 0.6, color = "lightblue") +
+  scale_x_date(
+    date_breaks = "1 day",           
+    date_labels = "%m %d") +
+  theme_cowplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#This step is messing up turbidity values for some reason!!
+#turb spikes on 4/16- remove 4/15 - 4/17
+df1 <- df1 %>%
+  mutate(TURBIDITY_FNU = ifelse(SITE == "SBO1" & 
+                                  DATE > as.Date("2026-04-15") & 
+                                  DATE < as.Date("2026-04-17"), NA, TURBIDITY_FNU))
+                                                      
+
+
+#BCF1-salinity
+BCF1wint <- df1 %>%
+  dplyr::filter(
+    SITE == "BCF1",
+    DATE >= as.Date("2025-11-01") & DATE <= as.Date("2026-04-30")
+  ) %>%
+  select(DATE, SITE, SAL_PSU, COND_US.CM, SPCOND_US.CM, ODO_MG.L)
+
+BCF1sal <- ggplot(BCF1wint, aes(y = SAL_PSU, x = DATE))+
+  geom_point(alpha = 0.6, color = "lightblue") +
+  scale_x_date(
+    limits = as.Date(c("2025-11-01", "2025-11-15")),
+    date_breaks = "1 day",           
+    date_labels = "%m %d") +
+  theme_cowplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#Looks like data is wonky after 11/06-remove all data after this
+df1 <- df1 %>%
+  mutate(
+    across(
+      c(SPCOND_US.CM, COND_US.CM, SAL_PSU, ODO_MG.L),
+      ~ ifelse(SITE == "BCF1" & 
+                 DATE > as.Date("2025-11-06") & 
+                 DATE < as.Date("2026-04-06"), NA, .x)
+    )
+  )
+
+#remove rows where all values are NA
+df1 <- df1 |> filter(!if_all(everything(), is.na))
 
 #save df before interpolation
 df_QAQC <- df1
+
+#export df before interpolation
+#write.csv(df1, file = "df1_26MAY2026SG.csv", row.names = FALSE)
+
+#Break up by year 
+#2023\
+#2024
+#2025
+#site, Time_UTC, lat, long, salinity, temp, chl (ug/L), chl (RFU), turbidity (FNU), depth
+
+df_QAQC <-  df_QAQC %>%
+  select(DATE, TIME_UTC, SITE, DEPTH_M, TEMP_C, SAL_PSU, COND_US.CM, CHLOROPHYLL_RFU, CHLOROPHYLL_UG.L, TURBIDITY_FNU, ODO_SAT, ODO_MG.L, LATITUDE, LONGITUDE, REGION, YEAR)
+
+df1_2023<- df_QAQC %>%
+  dplyr::filter(YEAR=="2023")
+
+df1_2024<- df_QAQC %>%
+  dplyr::filter(YEAR=="2024")
+
+df1_2025<- df_QAQC %>%
+  dplyr::filter(YEAR=="2025")
+
+
+
+# #Export
+write.csv(df1_2023, file.path(wd, "df1_2023.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+
+write.csv(df1_2024, file.path(wd, "df1_2024.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+
+write.csv(df1_2025, file.path(wd, "df1_2025.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
 # Imputation for NA values ------------------------------------------------
 #weighted average imputation
@@ -712,16 +848,23 @@ library(imputeTS)
 df1 <- df1 %>%
   arrange(SITE, TIME_UTC)
 
+#remove rows where all data is NA
+df1 <- df1[rowSums(is.na(df1)) != ncol(df1), ]
 
 # Loop through variables to create imputed versions
 for (v in vars) {
   df1[[v]] <- df1 %>%
     arrange(SITE, TIME_UTC) %>%
     group_by(SITE) %>%
-    mutate(temp_impute = na_ma(.data[[v]], k = 24, weighting = "exponential", maxgap = 336), #dont impute if there is data gap > 2 wks
+    mutate(temp_impute = na_ma(.data[[v]], 
+                               k = 24, #use 24 hours before and after NA pt
+                               weighting = "exponential", 
+                               maxgap = 336), #dont impute if data gap > 2 wks
            !!v := if_else(is.na(.data[[v]]), temp_impute, .data[[v]])) %>%
     pull(!!sym(v))
 }
+
+df_interpolated <- df1
 
 #check to see how many NA are left 
 na_counts <- df1 %>%
@@ -730,19 +873,16 @@ na_counts <- df1 %>%
 print(na_counts)
 #still lots of NA for chl RFU, all others OK 
 
-#export df as csv- this is df that has large outlier removed, and resulting NAs replacedn with imputed values 
-write.csv(df1, file = "df1.csv", row.names = FALSE)
+#export df as csv- this is df that has large outlier removed, and resulting NAs replacedn with imputed values Move to discussion and site thesis
+
+write.csv(df_interpolated, file = "df_interpolated_11MAY26_SG.csv", row.names = FALSE)
 
 
 # RWS export csvs ---------------------------------------------------------
 #2023 data QAQC for RWS
 #df_QAQC = dataframe w/ QAQC but no interpolation
 df_2023 <- df_QAQC %>%
-  filter(YEAR =="2023")
+  filter(YEAR =="2023")ow.names = FALSE)
 
-write.csv(df_2023, file = "df_2023.csv", row.names = FALSE)
-
-
-#2024 RAW data 
 
 
