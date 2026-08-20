@@ -16,12 +16,46 @@ library(dplyr) # Data wrangling
 library(lubridate) # Date-time parsing
 library(stringr) # Filename parsing via regex
 
-#Create paths for data and outputs
-dir.data.discrete <- file.path(wd, "Raw data from sensors/EXO_profiles/Raw Data sorted")  
+#Save working directory path as an object
+wd <- getwd()
+
+#Create path for data
+
+######### Uncomment the path you are using ##########
+
+# James drive path
+dir <- file.path("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data/Sensor Data Management")
+dir.data <- file.path(dir, "Raw data from sensors/EXO_profiles")
+
+# Sierra drive path 
+# dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/EXO_INSITU")
+
+#Create paths for outputs
+dir.outputs <-file.path(dir, "Outputs")
+dir.csv <- file.path(dir, "CSVs")
+
+#Find all CSV files
+
+csv_files <- list.files(
+  path = dir.data,
+  pattern = "\\.csv$",
+  full.names = TRUE,
+  recursive = TRUE,
+  ignore.case = TRUE
+)
 
 
 #Get list of all EXO CSV files
-csv_files <- list.files(path = dir.data.discrete, pattern = "*.csv", full.names = TRUE, recursive = TRUE)
+csv_files <- list.files(path = dir.data, pattern = "*.csv", full.names = TRUE, recursive = TRUE)
+
+# Exclude folders labeled "Data Dump" or "Raw Data sorted"
+csv_files <- csv_files[
+  !grepl(
+    "Data Dump|Raw Data sorted",
+    dirname(csv_files),
+    ignore.case = TRUE
+  )
+]
 
 #Create an empty list to store individual data frames
 data_list <- list()
@@ -29,7 +63,9 @@ data_list <- list()
 #Loop through each CSV file and read it into a data frame
 for (file in csv_files) {
   
-  df <- read.csv(file, header = FALSE)
+  df <- read.csv(file, skip = 9, 
+                 header = FALSE, 
+                 colClasses = "character")
   
   data_list[[file]] <- df
 }

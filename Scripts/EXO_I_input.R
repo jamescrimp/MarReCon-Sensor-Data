@@ -44,8 +44,6 @@ data_list <- list()
 #Loop through each CSV file and read it into a data frame
 for (file in csv_files) {
   
-  df <- read.csv(csv_files[8], skip = 9, header = FALSE, stringsAsFactors = FALSE)
-  
   df <- read.csv(file, skip = 9, header = FALSE)
   # 
   #Create a site identifier for each dataframe
