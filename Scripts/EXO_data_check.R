@@ -20,7 +20,7 @@ library(zoo)
 library(oce)
 
 #Set working directory 
-setwd("I:\\Shared drives\\Mariculture ReCon\\Data Management\\Raw data from sensors\\EXO_INSITU")
+#setwd("I:\\Shared drives\\Mariculture ReCon\\Data Management\\Raw data from sensors\\EXO_INSITU")
 
 #read csv files that you just offloaded. change:
 # -farm folder  
@@ -30,8 +30,9 @@ setwd("I:\\Shared drives\\Mariculture ReCon\\Data Management\\Raw data from sens
 
 
 # Add data file -----------------------------------------------------------
-test <- read_csv("I:\\Shared drives\\Mariculture ReCon\\Data Management\\Raw data from sensors\\EXO_INSITU\\KOB1\\RAW_EXO_I_KOD_KOB1_04JUN25.csv", 
-                 skip = 9, col_names = FALSE)
+#Sierra path
+#Note: if csv doesnt read in, open it and 'save as' then rerun
+test <- read_csv("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU/ROK1/RAW_EXO_I_PWS_ROK1_20APR26.csv", skip = 9, col_names = FALSE)
 
 #Combine multiple files if needed here
 #Name the combined df "test" still and the rest of the code will still run 
@@ -95,7 +96,7 @@ range(test$Turbidity_FNU, na.rm = TRUE)
 range(test$Chlorophyll_RFU, na.rm = TRUE)
 
 ##Notes so far
-# everythig else looks good
+# turb high!!
 
 
 # Step 4: Plot ------------------------------------------------------------
@@ -156,6 +157,10 @@ chlorophyll <- ggplot(test, aes(y = Chlorophyll_RFU, x = Date)) +
 #sensors specs for Turbidity
 test$Turbidity_FNU[test$Turbidity_FNU > 999] <- NA
 test$Turbidity_FNU[test$Turbidity_FNU < -0.3] <- NA
+
+#remove points outside of bio expectations
+test$Turbidity_FNU[test$Turbidity_FNU > 150] <- NA
+
 
 #Look at plot again
 #Looks much better- still some outliers but likely not due to sensor issues

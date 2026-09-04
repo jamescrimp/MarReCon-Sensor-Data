@@ -16,14 +16,9 @@ library(tidyr)
 library(cowplot)
 library(stringr)
 
-#Set Working Directory 
-setwd("C:/MarRecon_code/thesis_work")
-
-#Save working directory path as an object
-wd <- getwd()
 
 #Pull drectly from MarRecon shared drive 
-dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/EXO_INSITU")
+dir.data <- file.path("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU")
 
 
 # Get all CSV files 
@@ -227,15 +222,15 @@ exo_data$SpCond_uS.cm[exo_data$SpCond_uS.cm > 55000] <- NA
 #save all exo data that has basic QAQC
 exo_data_all <- exo_data
 
-#Export ROK1 spring 2026 data for AK 
-ROK1_sp26 <- exo_data %>%
-    filter(Year =="2026", 
-           Site == "ROK1")
-
-ROK1_sp26 <- ROK1_sp26[,-c(7,9,11,12,13,14,20,21,22,23,24,25,26)]
-#Export 
-
-write.csv(ROK1_sp26, file.path(wd, "ROK1_sp26.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+# #Export ROK1 spring 2026 data for AK 
+# ROK1_sp26 <- exo_data %>%
+#     filter(Year =="2026", 
+#            Site == "ROK1")
+# 
+# ROK1_sp26 <- ROK1_sp26[,-c(7,9,11,12,13,14,20,21,22,23,24,25,26)]
+# #Export 
+# 
+# write.csv(ROK1_sp26, file.path(wd, "ROK1_sp26.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
 #_____End of basic QAQC based on sensor specs___________________ 
 #
@@ -493,6 +488,7 @@ KODsal <- ggplot(kod_data, aes(y = Sal_PSU, x = Date)) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
 #KOB1 looks like its drifting low after Aug 2024- cut off after 6 mo?
+#Weird salinoity data at KIS1 and AOF1 in spring 2026
 #temp
 KODtmp <- ggplot(kod_data, aes(y = Temp_C, x = Date)) +
   geom_point(aes(color = factor (outlier_Temp_C)), alpha = 0.6) +
@@ -517,6 +513,7 @@ KODchl <- ggplot(kod_data, aes(y = Chlorophyll_RFU, x = Date)) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
 #Possible outliers at AOF1
+#AOF1 missing 2026 data 
 
 #turbidity 
 KODturb <- ggplot(kod_data, aes(y = Turbidity_FNU, x = Date)) +
