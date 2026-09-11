@@ -25,9 +25,10 @@ library(tidyverse)
 #We need to modify the csvs before we combine them
 #I only want to keep rows that have salinity data bc those have been calibrated
 #there will be overlaps in times/dates- we need to delete the first row after each deleted section 
+#
 
 # Define data directory
-dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/HOBO")
+dir.data <- file.path("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/HOBO")
 
 # Verify directory exists
 if (!dir.exists(dir.data)) {
@@ -42,25 +43,43 @@ csv_files <- list.files(
   recursive = TRUE
 )
 
+# Read in NOT calibrated CSVs
+csv_files_raw <- csv_files[grepl("NOT calibrated CSVs", csv_files) & 
+                             !grepl("Factory Cal", csv_files)]
 
-# Read in temperature only csv  -------------------------------------------
+cat("Found", length(csv_files_raw), "CSV files in NOT calibrated CSVs\n")
 
-# Get all CSV files specifically from "Temperature CSVs" subfolders
-csv_files_temp <- list.files(
-  path = dir.data,
-  pattern = "\\.csv$",
-  full.names = TRUE,
-  recursive = TRUE
-) 
+data_list_raw <- list()
+#Try to read in SN
+for (file in csv_files_raw) {
+  tryCatch({
+    path_parts <- strsplit(file, "/|\\\\")[[1]]
+    hobo_index <- which(path_parts == "HOBO")
+    site_name <- path_parts[hobo_index + 1]
+    
+    # Read just row 2 to grab the serial number from column 2
+    header_row <- read_csv(file, skip = 1, n_max = 1, col_names = FALSE, show_col_types = FALSE)
+    serial_number <- str_extract(header_row$X2[1], "\\d+")
+    
+    # Read the actual data, skipping the first 2 rows as before
+    df <- read_csv(file, skip = 2, col_names = FALSE, show_col_types = FALSE)
+    
+    df$site <- site_name
+    df$source_file <- tools::file_path_sans_ext(basename(file))
+    df$serial_number <- serial_number
+    
+    data_list_raw[[file]] <- df
+    cat("✓ Loaded:", site_name, "-", basename(file), "- Serial:", serial_number, "\n")
+    
+  }, error = function(e) {
+    warning("Failed to read ", basename(file), ": ", e$message)
+  })
+}
 
-# Keep only files inside "Temperature CSVs" folders
-csv_files_temp <- csv_files_temp[grepl("Temperature CSVs", csv_files_temp)]
+combined_df_raw <- bind_rows(data_list_raw)
 
-cat("Found", length(csv_files_temp), "CSV files in Temperature CSVs folders\n")
-
-data_list_temp <- list()
-
-for (file in csv_files_temp) {
+#Code to read in RAW files
+for (file in csv_files_raw) {
   tryCatch({
     path_parts <- strsplit(file, "/|\\\\")[[1]]
     hobo_index <- which(path_parts == "HOBO")
@@ -71,7 +90,7 @@ for (file in csv_files_temp) {
     df$site <- site_name
     df$source_file <- tools::file_path_sans_ext(basename(file))
     
-    data_list_temp[[file]] <- df
+    data_list_raw[[file]] <- df
     cat("✓ Loaded:", site_name, "-", basename(file), "\n")
     
   }, error = function(e) {
@@ -79,20 +98,22 @@ for (file in csv_files_temp) {
   })
 }
 
-combined_df_temp <- bind_rows(data_list_temp)
+combined_df_raw <- bind_rows(data_list_raw)
 
-#Remove col 4
-combined_df_temp <- combined_df_temp %>% 
-  select(-4)
+
+#Remove col 5 (filepath)
+combined_df_raw <- combined_df_raw %>% 
+  select(-5)
 
 #Rename columns 
 #1-datetime, 2-Conductivity 3-Temp 4-SpCond 5-Salinity 
-colnames(combined_df_temp) <- c("Time_UTC",
-                                "Temp_C", 
+colnames(combined_df_raw) <- c("Time_UTC",
+                                "Cond",
+                                "Temp_C",
                                 "Site")
 
 #rename df
-hobo_temp <- combined_df_temp
+hobo_data_raw <- combined_df_raw
 
 #Add region
 #Create a column identifying region
@@ -108,26 +129,31 @@ region_values <- c(
   SBR1 = "PWS"
 )
 
-hobo_temp$region <- region_values[hobo_temp$Site]
+hobo_data_raw$Region <- region_values[hobo_data_raw$Site]
 
 #Create a new df to make sure times parse 
-df_test <- hobo_temp
+df_test <- hobo_data_raw
 
 df_test <- df_test %>%
   mutate(
-    Time_UTC = if_else(
-      str_detect(Time_UTC, "/\\d{4}\\s"),  # Has 4-digit year
-      mdy_hm(Time_UTC),
-      mdy_hm(Time_UTC)  # lubridate handles 2-digit years automatically
-    ),
+    Time_UTC = parse_date_time(Time_UTC, orders = c("mdy HM", "mdy HMS")),
     date = as.Date(Time_UTC),
     year = year(Time_UTC)
   )
+#Check if any didnt parse
+sum(is.na(df_test$Time_UTC))
 #Looks good
-hobo_temp <- df_test
+
+hobo_data_raw <- df_test
 ##STOPE HERE TO MAKE SURE ALL TIMES PARSE
 #Check to make sure all dates have parsed correctly. If some sites have not, but you thik they should (format is correct), open their original CSV in the drive click "save as" CSV, then rerun all code- for some reason this helps
 
+#Check for duplicate rows - data recorded when a new sensor was started but the old one was still out
+df_test %>%
+  group_by(Site, Time_UTC) %>%
+  filter(n() > 1) %>%
+  ungroup() %>%
+  arrange(Site, Time_UTC)
 
 # Read in all hobo data ---------------------------------------------------
 
@@ -786,5 +812,32 @@ Sal
 # #looks pretty good!
 
 
+# Keep only files inside "Temperature CSVs" folders
+csv_files_temp <- csv_files_temp[grepl("Temperature CSVs", csv_files_temp)]
+
+cat("Found", length(csv_files_temp), "CSV files in Temperature CSVs folders\n")
+
+data_list_temp <- list()
+
+for (file in csv_files_temp) {
+  tryCatch({
+    path_parts <- strsplit(file, "/|\\\\")[[1]]
+    hobo_index <- which(path_parts == "HOBO")
+    site_name <- path_parts[hobo_index + 1]
+    
+    df <- read_csv(file, skip = 2, col_names = FALSE, show_col_types = FALSE)
+    
+    df$site <- site_name
+    df$source_file <- tools::file_path_sans_ext(basename(file))
+    
+    data_list_temp[[file]] <- df
+    cat("✓ Loaded:", site_name, "-", basename(file), "\n")
+    
+  }, error = function(e) {
+    warning("Failed to read ", basename(file), ": ", e$message)
+  })
+}
+
+combined_df_temp <- bind_rows(data_list_temp)
 
 
