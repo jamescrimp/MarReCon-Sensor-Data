@@ -470,7 +470,7 @@ KBYDOmgl <- ggplot(kby_data, aes(y = ODO_mg.L, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
-#BCF1 mg/L oxygen likley impacted by winky CT sensor- looks lower than it should
+#BCF1 mg/L oxygen likley impacted by wonky CT sensor in spring 2026- looks lower than it should
 #
 #____________________KOD_________________
 kod_data <- exo_data_yr %>%
@@ -500,6 +500,7 @@ KODtmp <- ggplot(kod_data, aes(y = Temp_C, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
+#Temp for al of KOB1 looks accurate 
 
 #chl RFU
 KODchl <- ggplot(kod_data, aes(y = Chlorophyll_RFU, x = Date)) +
@@ -512,8 +513,21 @@ KODchl <- ggplot(kod_data, aes(y = Chlorophyll_RFU, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
+#AOF1 missing 2026 data that should be in there.. error in chl sensor?
+#Look at chl ug/L
+KODchlugl <- ggplot(kod_data, aes(y = Chlorophyll_ug.L, x = Date)) +
+  geom_point(aes(color = factor (outlier_Chlorophyll_ug.L)), alpha = 0.6) +
+  labs(
+    title = "KOD chl ugL",
+    x = "Chl",
+    y = "Date"
+  ) +
+  scale_color_manual(values = c("0" = "green", "1" = "red")) +
+  facet_wrap(~ Site, ncol = 1, scales = "free_y") +
+  theme_minimal()
+
 #Possible outliers at AOF1
-#AOF1 missing 2026 data 
+#AOF1 missing 2026 data that should be in there.. error in chl sensor?
 
 #turbidity 
 KODturb <- ggplot(kod_data, aes(y = Turbidity_FNU, x = Date)) +
@@ -526,7 +540,8 @@ KODturb <- ggplot(kod_data, aes(y = Turbidity_FNU, x = Date)) +
   scale_color_manual(values = c("0" = "green", "1" = "red")) +
   facet_wrap(~ Site, ncol = 1, scales = "free_y") +
   theme_minimal()
-#Spike at KIS1 likely due to sensor drift- remove month before calibration?
+#Spike at KIS1 in summer 2024 likely due to sensor drift- remove month before calibration
+##Error at KOB1 in winter 2025 
 #Lets look a little closer into this
 KIS1smturb <- exo_data_yr %>%
   filter(
@@ -728,14 +743,14 @@ KOB1 <- df1 %>%
 KOB1_sal <- ggplot(KOB1, aes(y = SAL_PSU, x = DATE))+
     geom_point(alpha = 0.6, color = "lightblue") +
     scale_x_date(
-      date_breaks = "1 month",           
+      date_breaks = "2 week",           
       date_labels = "%m %d %y") +
     theme_cowplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 #salinity drops after 8/2024- this is after 6 mo deployed
 #Sensors went out on 2/10/2024, came back 6/4/2025
-#Remove data after the 6 month mark because it is not reliable
 #only salinity looks most impacted 
+#Look at RBR data from 2024 to see if it aligns
 
 df1 <- df1 %>%
   mutate(

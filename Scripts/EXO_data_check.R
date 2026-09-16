@@ -32,7 +32,7 @@ library(oce)
 # Add data file -----------------------------------------------------------
 #Sierra path
 #Note: if csv doesnt read in, open it and 'save as' then rerun
-test <- read_csv("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU/ROK1/RAW_EXO_I_PWS_ROK1_20APR26.csv", skip = 9, col_names = FALSE)
+test <- read_csv("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU/KIS1/RAW_EXO_I_KOD_KIS1_9APR26.csv", skip = 9, col_names = FALSE)
 
 #Combine multiple files if needed here
 #Name the combined df "test" still and the rest of the code will still run 
@@ -84,6 +84,8 @@ test <- test %>%filter(Depth_M > 1)
 #look at ranges for each paramter we care about to see if any fall our of what we are expecting 
 #salinity (15 - 35)
 range(test$Sal_PSU, na.rm = TRUE)
+#Conductivity (2000-5000)
+range(test$Cond_uS.cm, na.rm = TRUE)
 #temperaure (0 - 20)
 range(test$Temp_C, na.rm = TRUE)
 #oxygen mg/L (5-15)
@@ -94,9 +96,15 @@ range(test$ODO_sat, na.rm = TRUE)
 range(test$Turbidity_FNU, na.rm = TRUE)
 #chlorophyl (0-30)
 range(test$Chlorophyll_RFU, na.rm = TRUE)
+#chlorophyl ug/L (0-30)
+range(test$Chlorophyll_ug.L, na.rm = TRUE)
+#Battery pack V (11-13)
+range(test$Cable_Pwr_V, na.rm = TRUE)
+#Depth(2-5)
+range(test$Depth_M, na.rm = TRUE)
 
 ##Notes so far
-# turb high!!
+# Chl RFU too hi
 
 
 # Step 4: Plot ------------------------------------------------------------
@@ -107,6 +115,14 @@ salinity <- ggplot(test, aes(y = Sal_PSU, x = Date)) +
   labs(
     title = "Salnity",
     x = "Salinity",
+    y = "Date") +
+  theme_minimal()
+
+conductivity <- ggplot(test, aes(y = Cond_uS.cm, x = Date)) +
+  geom_point() +
+  labs(
+    title = "Conductivity",
+    x = "Cond",
     y = "Date") +
   theme_minimal()
 
@@ -142,7 +158,7 @@ turbidity <- ggplot(test, aes(y = Turbidity_FNU, x = Date)) +
     y = "Date") +
   theme_minimal()
 
-chlorophyll <- ggplot(test, aes(y = Chlorophyll_RFU, x = Date)) +
+chlorophyll_RFU <- ggplot(test, aes(y = Chlorophyll_RFU, x = Date)) +
   geom_point() +
   labs(
     title = "Chlorophyll",
@@ -150,12 +166,27 @@ chlorophyll <- ggplot(test, aes(y = Chlorophyll_RFU, x = Date)) +
     y = "Date") +
   theme_minimal()
 
+chlorophyll_ugL <- ggplot(test, aes(y = Chlorophyll_ug.L, x = Date)) +
+  geom_point() +
+  labs(
+    title = "Chlorophyll",
+    x = "Chlorophyll(ugL)",
+    y = "Date") +
+  theme_minimal()
+
+salinity
+temperature
+conductivity
+ox_per
+ox_mgL
+chlorophyll_RFU
+chlorophyll_ugL
 
 # Step 5: Deep dive -------------------------------------------------------
 #Look into things that seem weird- this will change each time 
-#Looks like there is one large outlier in turbidity that is skewing the plot, lets remove
-#sensors specs for Turbidity
-test$Turbidity_FNU[test$Turbidity_FNU > 999] <- NA
+
+#chl troubleshooting
+test$Chlorophyll_ug.L[test$Chlorophyll_ug.L > 100] <- NA
 test$Turbidity_FNU[test$Turbidity_FNU < -0.3] <- NA
 
 #remove points outside of bio expectations
