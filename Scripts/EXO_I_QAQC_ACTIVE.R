@@ -527,7 +527,9 @@ KODchlugl <- ggplot(kod_data, aes(y = Chlorophyll_ug.L, x = Date)) +
   theme_minimal()
 
 #Possible outliers at AOF1
-#AOF1 missing 2026 data that should be in there.. error in chl sensor?
+#AOF1 missing 2026 chl RFU data that should be in there.. 
+#error in chl sensor?
+#ug/L data looks ok
 
 #turbidity 
 KODturb <- ggplot(kod_data, aes(y = Turbidity_FNU, x = Date)) +
@@ -589,8 +591,7 @@ KODDOmgl <- ggplot(kod_data, aes(y = ODO_mg.L, x = Date)) +
 #Create new df to mess around with 
 exo_data2 <- exo_data_yr
 
-#Loop through and make NA if there is a 1 in each outlier_param column, make the 
-#param point NA. 
+#Loop through and make NA if there is a 1 in each outlier_param column, make the param point NA. 
 for (var in vars) {
   outlier_var <- paste0("outlier_", var)
   exo_data2[[var]][exo_data2[[outlier_var]] == 1] <- NA
@@ -598,8 +599,8 @@ for (var in vars) {
 
 
 #take a look- original data w/ flaggedoutliers 
-testchl <- ggplot(exo_data_yr, aes(y = Chlorophyll_RFU, x = Date)) +
-  geom_point(aes(color = factor (outlier_Chlorophyll_RFU)), alpha = 0.6) +
+testchl <- ggplot(exo_data_yr, aes(y = Chlorophyll_ug.L, x = Date)) +
+  geom_point(aes(color = factor (outlier_Chlorophyll_ug.L)), alpha = 0.6) +
   labs(
     title = "test chl rfu",
     x = "Chl",
@@ -610,8 +611,8 @@ testchl <- ggplot(exo_data_yr, aes(y = Chlorophyll_RFU, x = Date)) +
   theme_minimal()
 
 #Chl Data w/ outliers removed 
-testchl2 <- ggplot(exo_data2, aes(y = Chlorophyll_RFU, x = Date)) +
-  geom_point(aes(color = factor (outlier_Chlorophyll_RFU)), alpha = 0.6) +
+testchl2 <- ggplot(exo_data2, aes(y = Chlorophyll_ug.L, x = Date)) +
+  geom_point(aes(color = factor (outlier_Chlorophyll_ug.L)), alpha = 0.6) +
   labs(
     title = "test chl rfu",
     x = "Chl",
@@ -625,6 +626,10 @@ na_counts<- exo_data2 %>%
   summarise_all(~ sum(is.na(.)))
 
 print(na_counts)
+
+#Errors in chl RFU data still:
+#SSf1 spring 24 erronious points
+#AOF1 RFU data from spring 2026 should be delted 
 
 #At SSF1- there are only 4 points in very high RFU range with no build up to them
 #These are likely still errors-lets remove them
@@ -654,7 +659,7 @@ df3 <- df3[, -c(20:53)]
 
 str(df3)
 df1 <- df3
-
+#df1 is our QAQCd dataframe, but has many NA gaps from the process
 #Add season column
 df1 <- df1 %>%
   mutate(
@@ -709,18 +714,21 @@ ROK1smsal <- df1 %>%
   dplyr::filter(
     SITE == "ROK1",
     YEAR == "2025",
-    month(DATE) %in% c(7)  
+    month(DATE) %in% c(7,8,9,10)  
   ) %>%
-  select(DATE, SITE, SAL_PSU, COND_US.CM, SPCOND_US.CM )
+  select(DATE, SITE, SAL_PSU, COND_US.CM, SPCOND_US.CM, ODO_MG.L )
 
-ROK1sum_sal <- ggplot(ROK1smsal, aes(y = COND_US.CM, x = DATE))+
+ROK1sum_sal <- ggplot(ROK1smsal, aes(y = ODO_MG.L, x = DATE))+
   geom_point(alpha = 0.6, color = "lightblue") +
   scale_x_date(
     date_breaks = "1 day",           
     date_labels = "%m %d") +
   theme_cowplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-#Salinity, cond, spcon data went wonky on 7/24 (7/23 last good day)
+#Salinity, cond, spcon, ODO mgL data went wonky on 7/24 (7/23 last good day)
+
+###THIS CODE MESSED UP ROK1 SALINITY- NEED TO RE-RUN DF1
+###
 #Delete cond, sal, ODO mgL
 df1 <- df1 %>%
   mutate(
@@ -728,7 +736,7 @@ df1 <- df1 %>%
       c(SPCOND_US.CM, COND_US.CM, SAL_PSU, ODO_MG.L),
       ~ ifelse(SITE == "ROK1" & 
                  DATE > as.Date("2025-07-23") & 
-                 DATE < as.Date("2026-08-14"), NA, .x)
+                 DATE < as.Date("2025-10-02"), NA, .x)
     )
   )
 
@@ -741,23 +749,27 @@ KOB1 <- df1 %>%
 
 #plot KOB1 salinity 
 KOB1_sal <- ggplot(KOB1, aes(y = SAL_PSU, x = DATE))+
-    geom_point(alpha = 0.6, color = "lightblue") +
-    scale_x_date(
-      date_breaks = "2 week",           
-      date_labels = "%m %d %y") +
-    theme_cowplot() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  geom_point(alpha = 0.6, color = "lightblue") +
+  scale_x_date(
+    date_breaks = "1 week",           
+    date_labels = "%m %d %y",
+    limits = as.Date(c("2024-07-15", "2024-09-16"))) +
+  theme_cowplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 #salinity drops after 8/2024- this is after 6 mo deployed
 #Sensors went out on 2/10/2024, came back 6/4/2025
 #only salinity looks most impacted 
-#Look at RBR data from 2024 to see if it aligns
+#Look at RBR data from 2024 to see if it aligns- it doesnt
+#on 8/11 and 11/3 salinity should be near 30
+#delete values after drift start 
 
 df1 <- df1 %>%
   mutate(
     across(
-      c(SPCOND_US.CM, COND_US.CM, SAL_PSU, ODO_MG.L),
+      c(SPCOND_US.CM, COND_US.CM, SAL_PSU),
       ~ ifelse(SITE == "KOB1" & 
-                 DATE > as.Date("2024-08-10") & 
+                 DATE > as.Date("2024-08-14") & 
                  DATE < as.Date("2025-06-04"), NA, .x)
     )
   )
@@ -792,14 +804,14 @@ df1 <- df1 %>%
 BCF1wint <- df1 %>%
   dplyr::filter(
     SITE == "BCF1",
-    DATE >= as.Date("2025-11-01") & DATE <= as.Date("2026-04-30")
+    DATE >= as.Date("2024-11-01") & DATE <= as.Date("2026-06-30")
   ) %>%
   select(DATE, SITE, SAL_PSU, COND_US.CM, SPCOND_US.CM, ODO_MG.L)
 
-BCF1sal <- ggplot(BCF1wint, aes(y = SAL_PSU, x = DATE))+
+BCF1sal <- ggplot(BCF1wint, aes(y = ODO_MG.L, x = DATE))+
   geom_point(alpha = 0.6, color = "lightblue") +
   scale_x_date(
-    limits = as.Date(c("2025-11-01", "2025-11-15")),
+    limits = as.Date(c("2026-04-01", "2026-05-01")),
     date_breaks = "1 day",           
     date_labels = "%m %d") +
   theme_cowplot() +
@@ -812,15 +824,131 @@ df1 <- df1 %>%
       c(SPCOND_US.CM, COND_US.CM, SAL_PSU, ODO_MG.L),
       ~ ifelse(SITE == "BCF1" & 
                  DATE > as.Date("2025-11-06") & 
-                 DATE < as.Date("2026-04-06"), NA, .x)
+                 DATE < as.Date("2026-04-07"), NA, .x)
     )
   )
 
 #remove rows where all values are NA
 df1 <- df1 |> filter(!if_all(everything(), is.na))
 
-#save df before interpolation
+#KIS salinity in 2026
+#May and June
+#very low salinity - need to check w/ RBR from Nick but there arent any right now..
+#Will delete this chunk of data but change later if it matches his drops 
+
+#end of July - end of deployment
+#trending low; this is same as at AOF1 so might be a legit trend- we will leave for now
+KIS1sal <- ggplot(subset(df1, SITE == "KIS1"), aes(y = SAL_PSU, x = DATE)) +
+  geom_point(alpha = 0.6, color = "lightblue") +
+  scale_x_date(
+    limits = as.Date(c("2026-05-05", "2026-7-01")),
+    date_breaks = "1 day",           
+    date_labels = "%m %d") +
+  theme_cowplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df1 <- df1 %>%
+  mutate(
+    across(
+      c(SPCOND_US.CM, COND_US.CM, SAL_PSU),
+      ~ ifelse(SITE == "KIS1" & 
+                 DATE > as.Date("2026-05-14") & 
+                 DATE < as.Date("2026-06-19"), NA, .x)
+    )
+  )
+
+#Remove chl RFU from AOF1 spring/summer 2026
+df1 <- df1 %>%
+  mutate(
+    across(
+      c(CHLOROPHYLL_RFU),
+      ~ ifelse(SITE == "AOF1" & 
+                 DATE > as.Date("2026-04-08") & 
+                 DATE < as.Date("2026-08-06"), NA, .x)
+    )
+  )
+
+#salinity at MIO1 end of 2025
+##Lets look at RBR data to see if we can see where the drift starts- drift is not legit 
+MIO1sal <- ggplot(subset(df1, SITE == "MIO1"), aes(y = SAL_PSU, x = DATE)) +
+  geom_point(alpha = 0.6, color = "lightblue") +
+  scale_x_date(
+    limits = as.Date(c("2025-09-22", "2025-11-15")),
+    date_breaks = "1 day",           
+    date_labels = "%m %d %y") +
+  theme_cowplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+df1 <- df1 %>%
+  mutate(
+    across(
+      c(SAL_PSU,COND_US.CM),
+      ~ ifelse(SITE == "MIO1" & 
+                 DATE > as.Date("2025-10-01") & 
+                 DATE < as.Date("2025-11-04"), NA, .x)
+    )
+  )
+
+
+
+# View plots after manual trim and QAQC -----------------------------------
+
+#Function to view
+plot_var_faceted <- function(data, vars, site_col = "SITE", date_col = "DATE") {
+  
+  plot_list <- list()
+  
+  for (v in vars) {
+    p <- ggplot(data, aes(x = .data[[date_col]], y = .data[[v]])) +
+      geom_point(alpha = 0.6, color = "lightblue") +
+      facet_wrap(as.formula(paste("~", site_col))) +
+      scale_x_date(
+        date_breaks = "6 months",
+        date_labels = "%m %d %y"
+      ) +
+      labs(title = v, y = v, x = "Date") +
+      theme_cowplot() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+    plot_list[[v]] <- p
+  }
+  
+  return(plot_list)
+}
+
+#Use function
+all_plots <- plot_var_faceted(df1, vars)
+
+# View one param at a time
+all_plots[["SAL_PSU"]]
+
+all_plots[["TEMP_C"]]
+
+all_plots[["CHLOROPHYLL_RFU"]]
+
+all_plots[["CHLOROPHYLL_UG.L"]]
+
+all_plots[["TURBIDITY_FNU"]]
+
+all_plots[["ODO_MG.L"]]
+#Low blip at BCF1 in early 2026
+
+all_plots[["ODO_SAT"]]
+
+all_plots[["DEPTH_M"]]
+
+
+# Print all
+for (p in all_plots) print(p) 
+
+#Save df at this point before interpolation
 df_QAQC <- df1
+
+# Interpolation -----------------------------------------------------------
+
+####save df before interpolation
+####
+
 
 #export df before interpolation
 #write.csv(df1, file = "df1_26MAY2026SG.csv", row.names = FALSE)
@@ -831,26 +959,24 @@ df_QAQC <- df1
 #2025
 #site, Time_UTC, lat, long, salinity, temp, chl (ug/L), chl (RFU), turbidity (FNU), depth
 
-df_QAQC <-  df_QAQC %>%
-  select(DATE, TIME_UTC, SITE, DEPTH_M, TEMP_C, SAL_PSU, COND_US.CM, CHLOROPHYLL_RFU, CHLOROPHYLL_UG.L, TURBIDITY_FNU, ODO_SAT, ODO_MG.L, LATITUDE, LONGITUDE, REGION, YEAR)
-
-df1_2023<- df_QAQC %>%
-  dplyr::filter(YEAR=="2023")
-
-df1_2024<- df_QAQC %>%
-  dplyr::filter(YEAR=="2024")
-
-df1_2025<- df_QAQC %>%
-  dplyr::filter(YEAR=="2025")
-
-
-
-# #Export
-write.csv(df1_2023, file.path(wd, "df1_2023.csv"), row.names = FALSE, fileEncoding = "UTF-8")
-
-write.csv(df1_2024, file.path(wd, "df1_2024.csv"), row.names = FALSE, fileEncoding = "UTF-8")
-
-write.csv(df1_2025, file.path(wd, "df1_2025.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+# df_QAQC <-  df_QAQC %>%
+#   select(DATE, TIME_UTC, SITE, DEPTH_M, TEMP_C, SAL_PSU, COND_US.CM, CHLOROPHYLL_RFU, CHLOROPHYLL_UG.L, TURBIDITY_FNU, ODO_SAT, ODO_MG.L, LATITUDE, LONGITUDE, REGION, YEAR)
+# 
+# df1_2023<- df_QAQC %>%
+#   dplyr::filter(YEAR=="2023")
+# 
+# df1_2024<- df_QAQC %>%
+#   dplyr::filter(YEAR=="2024")
+# 
+# df1_2025<- df_QAQC %>%
+#   dplyr::filter(YEAR=="2025")
+# 
+# # #Export
+# write.csv(df1_2023, file.path(wd, "df1_2023.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+# 
+# write.csv(df1_2024, file.path(wd, "df1_2024.csv"), row.names = FALSE, fileEncoding = "UTF-8")
+# 
+# write.csv(df1_2025, file.path(wd, "df1_2025.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
 # Imputation for NA values ------------------------------------------------
 #weighted average imputation
@@ -883,11 +1009,18 @@ na_counts <- df1 %>%
   summarise_all(~ sum(is.na(.)))
 
 print(na_counts)
-#still lots of NA for chl RFU, all others OK 
+#still lots of NA for chl RFU, salinity, turbidity for chunks that had errors larger than 2 weeks  
 
 #export df as csv- this is df that has large outlier removed, and resulting NAs replacedn with imputed values Move to discussion and site thesis
 
-write.csv(df_interpolated, file = "df_interpolated_11MAY26_SG.csv", row.names = FALSE)
+#Export to QAQC folder in shared drive
+#I:\Shared drives\Mariculture ReCon\Data\Sensor Data Management\QAQC sensor data
+
+write.csv(df_interpolated, 
+          file = "I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/QAQC sensor data/df_interpolated_18SEPT2026_SG.csv", 
+          row.names = FALSE)
+
+write.csv(df_interpolated, file = "df_interpolated_18SEPT2026_SG.csv", row.names = FALSE)
 
 
 # RWS export csvs ---------------------------------------------------------
