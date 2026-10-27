@@ -13,6 +13,7 @@ library(tidyverse)
 library(patchwork)
 library(cowplot)
 library(readr)
+library(janitor)
 
 #read these data files in from the shared drive
 dir.data <- file.path(
@@ -62,6 +63,14 @@ RBRdat <- RBRdat %>%
 
 #Export this CSV that has all RBR data recorded by farmers up to date (18AUG2026)
 write.csv(RBRdat, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_all_18AUG26.csv"), row.names = FALSE)
+
+#Export SBR1 data for Mari
+SBR1_rbr <- RBRdat %>% filter(site == "SBR1")
+
+SBR12026_rbr <- SBR1_rbr %>% filter(date >= "2026-01-01" & date <= "2026-06-30")
+
+#Export 
+write.csv(SBR12026_rbr, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_SBR1_26OCT2026_SG.csv"), row.names = FALSE)
 
 # Calculate decimal year
 date_to_decimal <- function(date) {

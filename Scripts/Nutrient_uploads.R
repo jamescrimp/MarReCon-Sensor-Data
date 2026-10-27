@@ -98,6 +98,7 @@ data_all <- data_all |>
 #Export combined nutrient data w/o QAQC 
 write.csv(data_all, file = "I:/Shared drives/Mariculture ReCon/Data/Kelp, oyster, nutrient, chl/Nutrients/Nutrient compiled/nutrient_compiled_noQAQC_24SEPT2026_SG.csv", row.names = FALSE)
 
+
 #QAQC based on triplicates
 #lets make columns for mean, SD, and N
 #MAke a new df to save stats to 
@@ -181,4 +182,29 @@ plot_nutrient(df1, "NITRATE", free_y = TRUE)
 plot_nutrient(df1, "PHOSPHATE", free_y = TRUE)
 plot_nutrient(df1, "AMMONIUM", free_y = TRUE)
 plot_nutrient(df1, "SILICATE", free_y = TRUE)
+
+#Export data for SBR1 1/2026  - 6/2026 
+
+SBR1 <- df1 |>
+  filter (SITE == "SBR1")
+
+#filter for Jan - Jun 2026 
+SBR12026 <- SBR1 |> filter(DATE >= "2026-01-01" & DATE <= "2026-06-30")
+
+#Plot to look for outliers 
+#Looks good, only one ammonium value look sodd 
+
+plot_nutrient(SBR12026, "NITRATE", free_y = TRUE)
+plot_nutrient(SBR12026, "PHOSPHATE", free_y = TRUE)
+plot_nutrient(SBR12026, "AMMONIUM", free_y = TRUE)
+plot_nutrient(SBR12026, "SILICATE", free_y = TRUE)
+
+#Export SBR1 data triplicates 
+SBR1 <- data_all |>
+  filter (SITE == "SBR1")
+
+#filter for Jan - Jun 2026 
+SBR12026 <- SBR1 |> filter(DATE >= "2026-01-01" & DATE <= "2026-06-30")
+
+write.csv(SBR12026, file = "I:/Shared drives/Mariculture ReCon/Data/Kelp, oyster, nutrient, chl/Nutrients/Nutrient compiled/SBR1_noQAQC_26OCT2026_SG.csv", row.names = FALSE)
 
