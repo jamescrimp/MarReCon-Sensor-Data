@@ -32,7 +32,7 @@ library(oce)
 # Add data file -----------------------------------------------------------
 #Sierra path
 #Note: if csv doesnt read in, open it and 'save as' then rerun
-test <- read_csv("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU/KIS1/RAW_EXO_I_KOD_KIS1_9APR26.csv", skip = 9, col_names = FALSE)
+test <- read_csv("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU/SBO1/RAW_EXO_I_PWS_SBO1_SEPT26.csv", skip = 9, col_names = FALSE)
 
 #Combine multiple files if needed here
 #Name the combined df "test" still and the rest of the code will still run 
@@ -104,7 +104,7 @@ range(test$Cable_Pwr_V, na.rm = TRUE)
 range(test$Depth_M, na.rm = TRUE)
 
 ##Notes so far
-# Chl RFU too hi
+# All looks good
 
 
 # Step 4: Plot ------------------------------------------------------------
@@ -161,7 +161,7 @@ turbidity <- ggplot(test, aes(y = Turbidity_FNU, x = Date)) +
 chlorophyll_RFU <- ggplot(test, aes(y = Chlorophyll_RFU, x = Date)) +
   geom_point() +
   labs(
-    title = "Chlorophyll",
+    title = "Chlorophyll RFU",
     x = "Chlorophyll(RFU)",
     y = "Date") +
   theme_minimal()
@@ -169,7 +169,7 @@ chlorophyll_RFU <- ggplot(test, aes(y = Chlorophyll_RFU, x = Date)) +
 chlorophyll_ugL <- ggplot(test, aes(y = Chlorophyll_ug.L, x = Date)) +
   geom_point() +
   labs(
-    title = "Chlorophyll",
+    title = "Chlorophyll ug/L",
     x = "Chlorophyll(ugL)",
     y = "Date") +
   theme_minimal()
@@ -181,6 +181,7 @@ ox_per
 ox_mgL
 chlorophyll_RFU
 chlorophyll_ugL
+turbidity
 
 # Step 5: Deep dive -------------------------------------------------------
 #Look into things that seem weird- this will change each time 
@@ -190,7 +191,7 @@ test$Chlorophyll_ug.L[test$Chlorophyll_ug.L > 100] <- NA
 test$Turbidity_FNU[test$Turbidity_FNU < -0.3] <- NA
 
 #remove points outside of bio expectations
-test$Turbidity_FNU[test$Turbidity_FNU > 150] <- NA
+test$Turbidity_FNU[test$Turbidity_FNU > 100] <- NA
 
 
 #Look at plot again
