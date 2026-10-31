@@ -65,6 +65,9 @@ rsk_files <- rsk_files[!grepl("duplicates", rsk_files)]
 rsk_files <- rsk_files[!grepl("questions", rsk_files)]
 rsk_files <- rsk_files[!grepl("Ruskin xls", rsk_files)]
 rsk_files <- rsk_files[!grepl("AOA 925", rsk_files)]
+rsk_files <- rsk_files[!grepl("questionable", rsk_files)]
+
+
 
 
 ####
