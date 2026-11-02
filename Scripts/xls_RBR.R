@@ -22,10 +22,9 @@ library(readxl)
 wd <- getwd()
 
 # Set File Paths
-dir.data <- ("H:/My Drive/RBR Data")
+dir.data <- ("H:/My Drive/MarReCon RBR Data")
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
-
 
 
 # List all files with *.xlsx extension
@@ -185,7 +184,7 @@ xrbr_test1 %>%
   distinct(site, date) %>%
   count(site, name = "n_sampling_events")
 
-write.csv(xrbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\xRBR_data_18AUG26.csv"), row.names = FALSE)
+write.csv(xrbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\xRBR_data_02NOV26.csv"), row.names = FALSE)
 
 #_____________________EXO PROFILES____________________
 #It will take some work to wrangle the csvs into shape before running this code

@@ -37,7 +37,7 @@ dir.data <- ("H:/My Drive/RBR Data")
 wd <- getwd()
 
 # Set File Paths:Sierra
-dir.data <- ("H:/My Drive/RBR Data")
+dir.data <- ("H:/My Drive/MarReCon RBR Data")
 #>>>>>>> Sierra
 # dir.data <- file.path("~/Desktop/RBR data that doesn't work")
 dir.outputs <-file.path(wd, "outputs")
@@ -66,7 +66,7 @@ rsk_files <- rsk_files[!grepl("questions", rsk_files)]
 rsk_files <- rsk_files[!grepl("Ruskin xls", rsk_files)]
 rsk_files <- rsk_files[!grepl("AOA 925", rsk_files)]
 rsk_files <- rsk_files[!grepl("questionable", rsk_files)]
-
+rsk_files <- rsk_files[!grepl("RBR Tests", rsk_files)]
 
 
 
@@ -200,21 +200,21 @@ rbr_timefix <- rbr_timefix %>%
 
 rbr_data <- rbr_timefix
 
-#<<<<<<< HEAD
-#Pull of data from 2026 for AOF1 
-AOF126 <- rbr_data
-
-AOF126 <- rbr_data %>%
-  filter(year(date) == 2026, site == "AOF1")
-
-write.csv(AOF126, file.path("C:/Users/sierr/MarReCon-Sensor-Data/csv_exports/
-AOF1_2026.csv"), row.names = FALSE)
+# #<<<<<<< HEAD
+# #Pull of data from 2026 for AOF1 
+# AOF126 <- rbr_data
+# 
+# AOF126 <- rbr_data %>%
+#   filter(year(date) == 2026, site == "AOF1")
+# 
+# write.csv(AOF126, file.path("C:/Users/sierr/MarReCon-Sensor-Data/csv_exports/
+# AOF1_2026.csv"), row.names = FALSE)
 
 #write.csv(AOF126, file.path(wd, "AOF1_RBR_2026.csv"), row.names = FALSE)
 
 
 #Create a csv file 
-write.csv(rbr_data, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBR_data.csv"), row.names = FALSE)
+write.csv(rbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_02NOV26.csv"), row.names = FALSE)
 #=======
 rbr_test <- rbr_data
 
@@ -231,12 +231,12 @@ rbr_test1 <- rbr_test %>% distinct()
 
 rbr_data <- rbr_test1
 
-#How many individual sampling events per farm?
-rbr_test1 %>%
-  distinct(site, date) %>%
-  count(site, name = "n_sampling_events")
-
-#Create a csv file and save it to the csv folder in shared drive
-
-write.csv(rbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_18AUG26.csv"), row.names = FALSE)
-#>>>>>>> Sierra
+# #How many individual sampling events per farm?
+# rbr_test1 %>%
+#   distinct(site, date) %>%
+#   count(site, name = "n_sampling_events")
+# 
+# #Create a csv file and save it to the csv folder in shared drive
+# 
+# write.csv(rbr_data, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_18AUG26.csv"), row.names = FALSE)
+# #>>>>>>> Sierra

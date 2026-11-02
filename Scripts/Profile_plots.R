@@ -21,10 +21,10 @@ dir.data <- file.path(
 )
 
 #Data from RSK files read into R (latest version)
-RBRlist <- read_csv(file.path(dir.data, "RBR_data_18AUG26.csv"))
+RBRlist <- read_csv(file.path(dir.data, "RBR_data_02NOV26.csv"))
 
 #Data from Excel Ruskin files
-xRBRlist <- read_csv(file.path(dir.data, "xRBR_data_18AUG26.csv"))
+xRBRlist <- read_csv(file.path(dir.data, "xRBR_data_02NOV26.csv"))
 
 # #add data from some EXO profiles we need
 # exoRBRlist <- read_csv(
@@ -61,31 +61,33 @@ RBRdat <- RBRdat %>%
   dplyr::filter(conductivity >= 10)
 #RBRdat is working data fram with all RBR data in it
 
-#Export this CSV that has all RBR data recorded by farmers up to date (18AUG2026)
-write.csv(RBRdat, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_all_18AUG26.csv"), row.names = FALSE)
 
-#Export SBR1 data for Mari
-SBR1_rbr <- RBRdat %>% filter(site == "SBR1")
+#Convert conductivity from mS/cm to us/cm
+RBRdat <- RBRdat %>%
+  mutate(conductivity = conductivity * 1000)
 
-SBR12026_rbr <- SBR1_rbr %>% filter(date >= "2026-01-01" & date <= "2026-06-30")
+# #Export SBR1 data for Mari
+# SBR1_rbr <- RBRdat %>% filter(site == "SBR1")
+# 
+# SBR12026_rbr <- SBR1_rbr %>% filter(date >= "2026-01-01" & date <= "2026-06-30")
 
-#Export 
-write.csv(SBR12026_rbr, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_SBR1_26OCT2026_SG.csv"), row.names = FALSE)
+# #Export 
+# write.csv(SBR12026_rbr, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_SBR1_26OCT2026_SG.csv"), row.names = FALSE)
 
-# Calculate decimal year
-date_to_decimal <- function(date) {
-  year <- year(date)
-  start_of_year <- ymd(paste0(year, "-01-01"))
-  end_of_year <- ymd(paste0(year + 1, "-01-01"))
-  days_in_year <- as.numeric(difftime(end_of_year, start_of_year, units = "days"))
-  days_since_start <- as.numeric(difftime(date, start_of_year, units = "days"))
-  
-  
-  decimal_year <- year + (days_since_start / days_in_year)
-  return(decimal_year)
-}
-
-RBRdat$decimal_year <- date_to_decimal(RBRdat$time)
+# # Calculate decimal year
+# date_to_decimal <- function(date) {
+#   year <- year(date)
+#   start_of_year <- ymd(paste0(year, "-01-01"))
+#   end_of_year <- ymd(paste0(year + 1, "-01-01"))
+#   days_in_year <- as.numeric(difftime(end_of_year, start_of_year, units = "days"))
+#   days_since_start <- as.numeric(difftime(date, start_of_year, units = "days"))
+#   
+#   
+#   decimal_year <- year + (days_since_start / days_in_year)
+#   return(decimal_year)
+# }
+# 
+# RBRdat$decimal_year <- date_to_decimal(RBRdat$time)
 
 #Add DOY
 #RBRdat$doy <- yday(RBRdat$date)
@@ -156,34 +158,55 @@ RBRdat1 <- RBRdat1 %>%
 #Add year date
 RBRdat1 <- RBRdat1 %>%
   mutate(year = year(date))
-#make all names lowercase
-names(RBRdat1) <- tolower(names(RBRdat1))
+
 #add doy column 
 RBRdat1$doy <- yday(RBRdat1$date)
+
+#Make headers the same as EXO and Hobo data
+RBRdat <- RBRdat %>% rename(
+  TIME_UTC = time, 
+  DEPTH_M = pressure,
+  TEMP_C = temperature,
+  COND_US.CM = conductivity,
+  SAL_PSU = salinity,
+  SITE = site,
+  DATE = date
+)
+#make all names upper
+names(RBRdat1) <- toupper(names(RBRdat1))
   
-#Break into years 
-#2024 and 2025 data 
-RBRdata2024 <- RBRdat1 %>%
-  dplyr::filter(year == "2024")
 
-RBRdata2025 <- RBRdat1 %>%
-  dplyr::filter(year == "2025")
-
-RBRdata2026 <- RBRdat1 %>%
-  dplyr::filter(year == "2026")
 
 #Export CSV of RBRs from 2024:
 #write.csv(RBRdata2024, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2024.csv"), row.names = FALSE)
 
+#Remove calculated values for export
+RBRdat <- RBRdat1 %>% select(-c(CT, SA, RHO, SIGT, DOY))
+
+# #Export this CSV that has all RBR data recorded by farmers up to date 
+write.csv(RBRdat, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_all_02NOV26.csv"), row.names = FALSE)
+
+#Break into years for export 
+#2024 and 2025 data 
+RBRdata2024 <- RBRdat %>%
+  dplyr::filter(YEAR == "2024")
+
+RBRdata2025 <- RBRdat %>%
+  dplyr::filter(YEAR == "2025")
+
+RBRdata2026 <- RBRdat %>%
+  dplyr::filter(YEAR == "2026")
+
 #Export 2025 data
-write.csv(RBRdata2025, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2025.csv"), row.names = FALSE)
+write.csv(RBRdata2024, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_2024.csv"), row.names = FALSE)
+
+#Export 2025 data
+write.csv(RBRdata2025, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_2025.csv"), row.names = FALSE)
 
 #Export 2026 data
-write.csv(RBRdata2026, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata2026.csv"), row.names = FALSE)
+write.csv(RBRdata2026, file.path("I:\\Shared drives\\Mariculture ReCon\\Data\\Sensor Data Management\\CSVs\\RBR_data_2026.csv"), row.names = FALSE)
 
-#Export all data 
-#write.csv(RBRdat1, file.path("C:/MarRecon_code/thesis_work/RBR_code/ RBRdata_complete.csv"), row.names = FALSE)
-
+# Thesis work -------------------------------------------------------------
 #Thesis data mod for DOY plots 
 #make this data I will use for thesis: march 2024 - Feb 2025 
 RBR_thesis <- RBRdat1 %>%
@@ -192,7 +215,7 @@ RBR_thesis <- RBRdat1 %>%
 #add DOY for thesis data 
 RBR_thesis$date <- as.Date(RBR_thesis$date)  # adjust column name as needed
 
-# Thesis work -------------------------------------------------------------
+
 # Create continuous DOY starting from March 1, 2024
 march_1_2024 <- as.Date("2024-03-01")
 RBR_thesis$doy <- as.numeric(RBR_thesis$date - march_1_2024) + 1
