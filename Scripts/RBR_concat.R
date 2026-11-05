@@ -26,17 +26,6 @@ RBRlist <- read_csv(file.path(dir.data, "RBR_data_02NOV26.csv"))
 #Data from Excel Ruskin files
 xRBRlist <- read_csv(file.path(dir.data, "xRBR_data_02NOV26.csv"))
 
-# #add data from some EXO profiles we need
-# exoRBRlist <- read_csv(
-#   "C:/MarRecon_code/thesis_work/RBR_code/EXO_prof/EXO_profiles.csv")
-# #correct date form
-# exoRBRlist$date <- mdy(exoRBRlist$date)
-
-#Combine date time column 
-#exoRBRlist$time <- ymd_hms(paste(exoRBRlist$date, exoRBRlist$time))
-#str(exoRBRlist)
-
-
 #make pressure neg (better for plotting)
 xRBRlist$pressure <- -xRBRlist$pressure # reverse sign for plotting
 RBRlist$pressure <- -RBRlist$pressure # reverse sign for plotting
@@ -53,14 +42,13 @@ RBRdat %>%
 #look for duplicates
 RBRdat %>% get_dupes()
 
-#Remove duplicate rows (keep first one)
-RBRdat <- RBRdat %>% distinct()
+# #Remove duplicate rows (keep first one)
+# RBRdat <- RBRdat %>% distinct()
 
 #remove conductivity less than 10- likely not in water yet
 RBRdat <- RBRdat %>%
   dplyr::filter(conductivity >= 10)
 #RBRdat is working data fram with all RBR data in it
-
 
 #Convert conductivity from mS/cm to us/cm
 RBRdat <- RBRdat %>%
@@ -137,7 +125,7 @@ RBRdat1 <- RBRdat1 %>%
 RBRdat1$doy <- yday(RBRdat1$date)
 
 #Make headers the same as EXO and Hobo data
-RBRdat <- RBRdat %>% rename(
+RBRdat1 <- RBRdat1 %>% rename(
   TIME_UTC = time, 
   DEPTH_M = pressure,
   TEMP_C = temperature,
