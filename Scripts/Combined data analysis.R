@@ -26,6 +26,12 @@ library(ggplot2)
 library(cowplot)
 library(patchwork)
 
+# ---- Set working directories --------------------------------
+# James drive path
+dir <- file.path("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data/Sensor Data Management")
+
+# Sierra drive path 
+# dir.data <- file.path("H:/Shared drives/Mariculture ReCon/Data Management/Raw data from sensors/EXO_INSITU")
 # ---- Global constants --------------------------------------
 SITE_LEVELS <- c(
   "AOF1","KIS1","KOB1","BCF1","MIO1",
@@ -67,9 +73,9 @@ make_dirs <- function(wd = getwd()) {
   
   dirs <- list(
     wd          = wd,
-    dir.dat     = file.path(wd, "Raw data from sensors"),
-    dir.csv     = file.path(wd, "CSVs"),
-    dir.outputs = file.path(wd, "Outputs")
+    dir.dat     = file.path(dir, "Raw data from sensors"),
+    dir.csv     = file.path(dir, "CSVs"),
+    dir.outputs = file.path(dir, "Outputs")
   )
   
   for (d in dirs) {
@@ -1131,7 +1137,7 @@ plot_temperature_by_site(
   par_by_date = par_by_date,
   out_dir      = paths$plot_dirs$MeanTemp,
   date_min     = DATE_MIN,
-  date_max     = as.Date("2026-07-31")
+  date_max     = as.Date("2026-12-31")
 )
 
 # ---- Plots: Temperature by site (HOURLY) --------------
@@ -1140,7 +1146,7 @@ plot_temperature_by_site_hourly(
   hobo_data = hobo_data,
   out_dir   = paths$plot_dirs$MeanTemp,
   date_min  = DATE_MIN,
-  date_max  = as.Date("2026-07-31"),
+  date_max  = as.Date("2026-12-31"),
   gap_hours = 24 * 7
 )
 
@@ -1151,7 +1157,7 @@ plot_temperature_by_site_weekly(
   par_by_week = par_by_week,
   out_dir     = paths$plot_dirs$MeanTemp,
   date_min    = DATE_MIN,
-  date_max    = as.Date("2026-07-31"),
+  date_max    = as.Date("2026-12-31"),
   gap_weeks   = 2
 )
 
@@ -1163,7 +1169,7 @@ plot_salinity_by_site(
   hobo_by_date = hobo_by_date,
   out_dir      = paths$plot_dirs$MeanSal,
   date_min     = DATE_MIN,
-  date_max     = as.Date("2026-07-31")
+  date_max     = as.Date("2026-12-31")
 )
 
 # ---- Plots: Salinity by site (HOURLY) ----------------------
@@ -1172,7 +1178,7 @@ plot_salinity_by_site_hourly(
   hobo_data = hobo_data,
   out_dir   = paths$plot_dirs$MeanSal,
   date_min  = DATE_MIN,
-  date_max  = as.Date("2026-07-31"),
+  date_max  = as.Date("2026-12-31"),
   gap_hours = 24 * 7
 )
 
@@ -1182,7 +1188,7 @@ plot_salinity_by_site_weekly(
   hobo_weekly = hobo_sal_weekly,
   out_dir     = paths$plot_dirs$MeanSal,
   date_min    = DATE_MIN,
-  date_max    = as.Date("2026-07-31"),
+  date_max    = as.Date("2026-12-31"),
   gap_weeks   = 2
 )
 
@@ -1191,7 +1197,7 @@ plot_chlorophyll_by_site_daily(
   exo_by_date  = exo_by_date,
   out_dir      = paths$plot_dirs$MeanChlor,
   date_min     = DATE_MIN,
-  date_max     = as.Date("2026-07-31")
+  date_max     = as.Date("2026-12-31")
 )
 
 # ---- Plots: Turbidity by site (DAILY) -----------------------
@@ -1199,7 +1205,7 @@ plot_turbidity_by_site_daily(
   exo_by_date  = exo_by_date,
   out_dir      = paths$plot_dirs$MeanTurb,
   date_min     = DATE_MIN,
-  date_max     = as.Date("2026-07-31")
+  date_max     = as.Date("2026-12-31")
 )
 
 
@@ -1324,6 +1330,6 @@ plot_rbr_temperature_profile_by_year(
   rbr_data = rbr_data,
   out_dir  = paths$plot_dirs$MeanTemp,
   date_min = DATE_MIN,
-  date_max = as.Date("2026-07-31"),
+  date_max = as.Date("2026-12-31"),
   depth_bin_size = .5
 )
