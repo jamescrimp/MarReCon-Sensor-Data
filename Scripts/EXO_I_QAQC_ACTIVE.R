@@ -17,8 +17,13 @@ library(cowplot)
 library(stringr)
 
 
-#Pull drectly from MarRecon shared drive 
-dir.data <- file.path("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/Raw data from sensors/EXO_INSITU")
+#Sierra File Path
+# dir <- file.path("I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management")
+# dir <- file.path(dir, "Raw data from sensors/EXO_INSITU")
+
+#James File Path
+dir <- file.path("~/Library/CloudStorage/GoogleDrive-jcrimp@alaska.edu/Shared drives/Mariculture ReCon/Data/Sensor Data Management")
+dir.data <- file.path(dir, "Raw data from sensors/EXO_INSITU")
 
 
 # Get all CSV files 
@@ -1017,10 +1022,10 @@ print(na_counts)
 #I:\Shared drives\Mariculture ReCon\Data\Sensor Data Management\QAQC sensor data
 
 write.csv(df_interpolated, 
-          file = "I:/Shared drives/Mariculture ReCon/Data/Sensor Data Management/QAQC sensor data/df_interpolated_18SEPT2026_SG.csv", 
+          file.path(dir, "QAQC sensor data/df_interpolated_05NOV26_SG.csv"), 
           row.names = FALSE)
 
-write.csv(df_interpolated, file = "df_interpolated_18SEPT2026_SG.csv", row.names = FALSE)
+# write.csv(df_interpolated, file = "df_interpolated_18SEPT2026_SG.csv", row.names = FALSE)
 
 
 # RWS export csvs ---------------------------------------------------------
