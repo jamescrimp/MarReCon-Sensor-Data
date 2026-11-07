@@ -75,7 +75,7 @@ daily_mean <- function(df) {
 exo_daily  <- daily_mean(exo)
 hobo_daily <- daily_mean(hobo)
 
-# Generic plotting function
+# Generic plotting function: daily mean 
 plot_var_by_site <- function(var, ylab) {
   dat <- bind_rows(
     exo_daily  %>% mutate(SOURCE = "EXO"),
@@ -116,7 +116,8 @@ plots_sal  <- plot_var_by_site("SAL_PSU", "Salinity (PSU)")
 
 # View
 names(plots_temp)
-plots_temp[["ROK1"]]
+ROK1_temp <- plots_temp[["ROK1"]]
+SBO1_temp <- plots_temp[["SBO1"]]
 
 
 #Export as PDFs
